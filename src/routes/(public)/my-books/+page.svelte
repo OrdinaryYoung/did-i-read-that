@@ -10,7 +10,7 @@
 		faTrashCan
 	} from '@fortawesome/free-solid-svg-icons';
 
-	import { EditModal, CustomHeader, StatsUl, StatsLi } from '$lib';
+	import { EditModal, CustomHeader, StatsUl, StatsLi, formatDate } from '$lib';
 
 	let { data } = $props();
 
@@ -135,6 +135,10 @@
 							</div>
 						</div>
 					</div>
+					<div class="mt-6 flex flex-col gap-1 text-start text-sm">
+						<p class="text-gray-400">Last Reading Time:</p>
+						{formatDate(CONT_BOOK.addedAt, 'date-time-day')}
+					</div>
 				</div>
 			</div>
 		</section>
@@ -202,7 +206,7 @@
 			class="mt-6 inline-block rounded bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
 		>
 			<FontAwesomeIcon class="size-4" icon={faCirclePlus} />
-			Add Book
+			Add a book
 		</a>
 
 		<div class=" overflow-x-auto">
@@ -211,13 +215,15 @@
 					No books found, Add a new book to track it from here
 				</p>
 			{:else}
-				<table class="mt-4 w-full overflow-hidden rounded-md bg-white shadow-md">
+				<table class="mt-4 w-full overflow-hidden rounded-md bg-white text-sm shadow-md">
 					<thead>
 						<tr class="bg-indigo-300 text-sm">
 							<th class="px-4 py-2 text-start font-semibold">#</th>
 							<th class="px-4 py-2 text-start font-semibold">Title</th>
 							<th class="px-4 py-2 text-start font-semibold">Author</th>
+							<th class="px-4 py-2 text-start font-semibold">Started Date</th>
 							<th class="px-4 py-2 text-start font-semibold">Status</th>
+							<th class="px-4 py-2 text-start font-semibold">Last Reading</th>
 							<th class="px-4 py-2 text-start font-semibold">Done%</th>
 							<th class="px-4 py-2 text-start font-semibold">Current Page</th>
 							<th class="px-4 py-2 text-start font-semibold">Progress</th>
@@ -227,10 +233,14 @@
 					<tbody>
 						{#each books as book, i (i)}
 							<tr class="border-t {i % 2 !== 0 ? 'bg-indigo-100' : ''}">
-								<td class="px-4 py-2 text-sm">{i + 1}</td>
+								<td class="px-4 py-2">{i + 1}</td>
 								<td class="px-4 py-2">{book.title}</td>
 								<td class="px-4 py-2">{book.author}</td>
+								<td class="px-4 py-2">{formatDate(book.addedAt)}</td>
 								<td class="px-4 py-2">{book.status}</td>
+								<td class="px-4 py-2"
+									>{formatDate(book.updatedAt)}<br />{formatDate(book.updatedAt, 'time')}</td
+								>
 								<td class="px-4 py-2">{((book.progress / book.pages) * 100).toFixed()}%</td>
 								<td class="px-4 py-2">
 									<span class="text-sm" style="color: var(--color-{statusColors[book.status]})"
