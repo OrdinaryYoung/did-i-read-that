@@ -11,6 +11,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 
 	import { EditModal, CustomHeader, StatsUl, StatsLi, formatDate } from '$lib';
+	import { showGModal } from '$lib/stores/modalStore';
+	import { showToast } from '$lib/stores/toastStore';
 
 	let { data } = $props();
 
@@ -67,22 +69,33 @@
 		showModal.set(false); // Close the modal
 	}
 
-	async function deleteBook(bookId: string) {
-		const response = await fetch('/api/books/delete', {
-			method: 'POST',
-			body: JSON.stringify({ id: bookId }),
-			headers: { 'Content-Type': 'application/json' }
-		});
+	function deleteBook(bookId: string) {
+		showGModal(
+			'Delete Book?',
+			'Are you sure you want to delete this book? This action cannot be undone.',
+			'red',
+			async () => {
+				const response = await fetch('/api/books/delete', {
+					method: 'POST',
+					body: JSON.stringify({ id: bookId }),
+					headers: { 'Content-Type': 'application/json' }
+				});
 
-		const result = await response.json();
+				const result = await response.json();
 
-		if (!result.success) {
-			console.error(result.error || 'Failed to delete the book');
-			return;
-		}
+				if (!result.success) {
+					console.error(result.error || 'Failed to delete the book');
+					showToast('Failed to delete the book', 'error');
+					return;
+				}
 
-		books = books.filter((book) => book.id !== bookId);
-		updateStats();
+				books = books.filter((book) => book.id !== bookId);
+				updateStats();
+				showToast('Book deleted successfully!', 'success');
+			},
+			'Delete',
+			'Cancel'
+		);
 	}
 
 	const updateStats = () => {
@@ -203,7 +216,7 @@
 		<hr class="text-gray-200" />
 		<a
 			href="/my-books/add"
-			class="mt-6 inline-block rounded bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
+			class="mt-6 flex w-fit items-center justify-start gap-2 rounded bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
 		>
 			<FontAwesomeIcon class="size-4" icon={faCirclePlus} />
 			Add a book
@@ -232,13 +245,13 @@
 					</thead>
 					<tbody>
 						{#each books as book, i (i)}
-							<tr class="border-t {i % 2 !== 0 ? 'bg-indigo-100' : ''}">
+							<tr class={i % 2 !== 0 ? 'bg-indigo-100' : ''}>
 								<td class="px-4 py-2">{i + 1}</td>
-								<td class="px-4 py-2">{book.title}</td>
-								<td class="px-4 py-2">{book.author}</td>
-								<td class="px-4 py-2">{formatDate(book.addedAt)}</td>
-								<td class="px-4 py-2">{book.status}</td>
-								<td class="px-4 py-2"
+								<td class="px-4 py-2 text-nowrap">{book.title}</td>
+								<td class="px-4 py-2 text-nowrap">{book.author}</td>
+								<td class="px-4 py-2 text-nowrap">{formatDate(book.addedAt)}</td>
+								<td class="px-4 py-2 text-nowrap">{book.status}</td>
+								<td class="px-8 py-2 text-nowrap"
 									>{formatDate(book.updatedAt)}<br />{formatDate(book.updatedAt, 'time')}</td
 								>
 								<td class="px-4 py-2">{((book.progress / book.pages) * 100).toFixed()}%</td>
@@ -260,7 +273,7 @@
 									</div></td
 								>
 
-								<td class="flex justify-end-safe gap-2 px-4 py-2">
+								<td class="flex grow items-center justify-end-safe gap-2 px-4 py-2">
 									<button
 										onclick={() => openModal(book)}
 										class="rounded bg-indigo-500 px-4 py-2 text-white hover:bg-blue-400"

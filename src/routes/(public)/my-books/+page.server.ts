@@ -19,7 +19,6 @@ export const load = async ({ cookies }) => {
 		return { books, error: null };
 	} else {
 		const books = cookies.get('books') ? JSON.parse(cookies.get('books')!) : [];
-		console.log(books);
 		return { books, error: null, title: PAGE_TITLE };
 	}
 };

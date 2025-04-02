@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { showGModal } from '$lib/stores/modalStore';
+	import { showToast } from '$lib/stores/toastStore';
 
 	let title = '';
 	let author = '';
@@ -20,20 +22,31 @@
 			error = 'Current Page can not be greater than Total Pages';
 			return;
 		}
-		const response = await fetch('/api/books/add', {
-			method: 'POST',
-			body: JSON.stringify({ title, author, pages, status, progress }),
-			headers: { 'Content-Type': 'application/json' }
-		});
+		showGModal(
+			'Add Book?',
+			'Are you sure you want to save the new book?',
+			'indigo',
+			async () => {
+				const response = await fetch('/api/books/add', {
+					method: 'POST',
+					body: JSON.stringify({ title, author, pages, status, progress }),
+					headers: { 'Content-Type': 'application/json' }
+				});
 
-		const data = await response.json();
+				const data = await response.json();
 
-		if (!data.success) {
-			error = data.error || 'Failed to add book';
-			return;
-		}
+				if (!data.success) {
+					error = data.error || 'Failed to add book';
+					showToast('Failed to add the new book!', 'error');
+					return;
+				}
+				showToast('Book added successfully!', 'success');
+				goto('/my-books'); // Redirect after adding
+			},
 
-		goto('/my-books'); // Redirect after adding
+			'Add',
+			'Cancel'
+		);
 	}
 </script>
 
