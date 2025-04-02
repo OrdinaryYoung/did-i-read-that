@@ -1,0 +1,286 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import {
+		faCirclePlus,
+		faChartSimple,
+		faBookOpen,
+		faPencil,
+		faTrashCan
+	} from '@fortawesome/free-solid-svg-icons';
+
+	import { EditModal, CustomHeader, StatsUl, StatsLi } from '$lib';
+
+	let { data } = $props();
+
+	let showModal = writable(false); // State to control modal visibility
+	let selectedBook = writable(null); // The book being edited
+
+	let books: Book[] = $state(data.books);
+	let stats = $state({
+		reading: 0,
+		completed: 0,
+		'on-hold': 0,
+		dropped: 0,
+		'plan-to-read': 0,
+		totalBooks: 0,
+		totalPages: 0
+	});
+
+	const statusColors: Record<string, string> = {
+		'plan-to-read': 'gray-400',
+		reading: 'green-500',
+		completed: 'indigo-700',
+		'on-hold': 'amber-400',
+		dropped: 'red-700'
+	};
+
+	function openModal(book: Book) {
+		selectedBook.set(book); // Set the book to be edited
+		showModal.set(true); // Show the modal
+	}
+
+	async function updateBook(updatedBook: Book) {
+		const response = await fetch('/api/books/edit', {
+			method: 'POST',
+			body: JSON.stringify(updatedBook),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		if (!response.ok) {
+			console.error('Failed to update the book');
+			return;
+		}
+
+		const result = await response.json();
+
+		if (!result.success) {
+			console.error(result.error || 'Failed to update the book');
+			return;
+		}
+		books = books.map((book) => {
+			if (book.id === updatedBook.id) return updatedBook;
+			return book;
+		});
+
+		updateStats();
+		showModal.set(false); // Close the modal
+	}
+
+	async function deleteBook(bookId: string) {
+		const response = await fetch('/api/books/delete', {
+			method: 'POST',
+			body: JSON.stringify({ id: bookId }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+
+		const result = await response.json();
+
+		if (!result.success) {
+			console.error(result.error || 'Failed to delete the book');
+			return;
+		}
+
+		books = books.filter((book) => book.id !== bookId);
+		updateStats();
+	}
+
+	const updateStats = () => {
+		stats.totalBooks = books.length;
+		stats.totalPages = books.reduce((sum, book) => sum + book.progress, 0);
+
+		Object.keys(stats).forEach((status) => {
+			if (status !== 'totalBooks' && status !== 'totalPages') {
+				stats[status] = books.filter((book) => book.status === status).length;
+			}
+		});
+	};
+
+	onMount(() => {
+		updateStats();
+	});
+</script>
+
+<CustomHeader />
+<main class="container mx-auto px-4 pb-16">
+	{#if books.filter((book) => book.status === 'reading').length !== 0}
+		{@const CONT_BOOK: Book = books.filter((book)=> book.status === 'reading')[0]}
+		<section class="mx-auto mt-12 grid w-full justify-center gap-8 text-center">
+			<h1 class="text-2xl font-semibold">Continue Reading</h1>
+			<div class="flex h-fit w-2xs flex-col gap-4 rounded-lg border border-gray-300 p-4 shadow-lg">
+				<img src="https://placehold.co/300x350?text=?" alt="book cover" class="rounded-lg" />
+				<div>
+					<p class="text-xl font-semibold">{CONT_BOOK.title}</p>
+					<p>{CONT_BOOK.author}</p>
+					<div class="mt-6">
+						<p class="mb-0.5 text-end text-[.7rem] text-gray-400">
+							page <span
+								class="text-sm"
+								style="color: var(--color-{statusColors[CONT_BOOK.status]})"
+								>{CONT_BOOK.progress}</span
+							>
+							of {CONT_BOOK.pages}
+						</p>
+						<div class="flex h-6 overflow-hidden rounded-lg bg-gray-200">
+							<div
+								class="h-full overflow-hidden"
+								style="width: {(
+									(CONT_BOOK.progress / CONT_BOOK.pages) *
+									100
+								).toFixed()}%; background: var(--color-{statusColors[CONT_BOOK.status]})"
+							>
+								<p class="absolute left-1/2 translate-x-[-50%] text-white">
+									{((CONT_BOOK.progress / CONT_BOOK.pages) * 100).toFixed()}%
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	{/if}
+	<section id="books_stats" class="mt-16">
+		<div class="flex items-center gap-2">
+			<FontAwesomeIcon class="size-4" icon={faChartSimple} />
+			<h4 class="text-xl">Books Stats</h4>
+		</div>
+		<hr class="text-gray-200" />
+		<div class="mt-6 flex h-6 overflow-hidden rounded-lg bg-gray-200 md:w-146">
+			<div
+				class="h-full bg-green-500"
+				style="width: {(stats['reading'] / stats['totalBooks']) * 100}%"
+			></div>
+			<div
+				class="h-full bg-indigo-700"
+				style="width: {(stats['completed'] / stats['totalBooks']) * 100}%"
+			></div>
+			<div
+				class="h-full bg-amber-400"
+				style="width: {(stats['on-hold'] / stats['totalBooks']) * 100}%"
+			></div>
+			<div
+				class="h-full bg-red-700"
+				style="width: {(stats['dropped'] / stats['totalBooks']) * 100}%"
+			></div>
+			<div
+				class="h-full bg-gray-400"
+				style="width: {(stats['plan-to-read'] / stats['totalBooks']) * 100}%"
+			></div>
+		</div>
+		<div class="mt-4 flex flex-col gap-16 md:w-xl md:flex-row">
+			<StatsUl>
+				<StatsLi color="text-green-500" type="Reading" value={stats.reading} />
+				<StatsLi color="text-indigo-700" type="Completed" value={stats.completed} />
+				<StatsLi color="text-amber-400" type="On-Hold" value={stats['on-hold']} />
+				<StatsLi color="text-red-700" type="Dropped" value={stats.dropped} />
+				<StatsLi color="text-gray-400" type="Plan to Read" value={stats['plan-to-read']} />
+			</StatsUl>
+			<ul class="flex grow flex-col gap-1">
+				<li class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<p class="text-sm text-gray-600">Total Books</p>
+					</div>
+					<p class="">{stats.totalBooks}</p>
+				</li>
+				<li class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<p class="text-sm text-gray-600">Pages</p>
+					</div>
+					<p class="">{stats.totalPages}</p>
+				</li>
+			</ul>
+		</div>
+	</section>
+	<section class="mt-16">
+		<div class="flex items-center gap-2">
+			<FontAwesomeIcon class="size-4" icon={faBookOpen} />
+			<h4 class="text-xl">Books List</h4>
+		</div>
+		<hr class="text-gray-200" />
+		<a
+			href="/my-books/add"
+			class="mt-6 inline-block rounded bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
+		>
+			<FontAwesomeIcon class="size-4" icon={faCirclePlus} />
+			Add Book
+		</a>
+
+		<div class=" overflow-x-auto">
+			{#if books.length === 0}
+				<p class="mt-4 rounded-2xl border border-gray-300 p-4 text-xl">
+					No books found, Add a new book to track it from here
+				</p>
+			{:else}
+				<table class="mt-4 w-full overflow-hidden rounded-md bg-white shadow-md">
+					<thead>
+						<tr class="bg-indigo-300 text-sm">
+							<th class="px-4 py-2 text-start font-semibold">#</th>
+							<th class="px-4 py-2 text-start font-semibold">Title</th>
+							<th class="px-4 py-2 text-start font-semibold">Author</th>
+							<th class="px-4 py-2 text-start font-semibold">Status</th>
+							<th class="px-4 py-2 text-start font-semibold">Done%</th>
+							<th class="px-4 py-2 text-start font-semibold">Current Page</th>
+							<th class="px-4 py-2 text-start font-semibold">Progress</th>
+							<th class="px-4 py-2 text-right font-semibold"></th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each books as book, i (i)}
+							<tr class="border-t {i % 2 !== 0 ? 'bg-indigo-100' : ''}">
+								<td class="px-4 py-2 text-sm">{i + 1}</td>
+								<td class="px-4 py-2">{book.title}</td>
+								<td class="px-4 py-2">{book.author}</td>
+								<td class="px-4 py-2">{book.status}</td>
+								<td class="px-4 py-2">{((book.progress / book.pages) * 100).toFixed()}%</td>
+								<td class="px-4 py-2">
+									<span class="text-sm" style="color: var(--color-{statusColors[book.status]})"
+										>{book.progress}</span
+									>
+									/ {book.pages}</td
+								>
+								<td class="px-4 py-2">
+									<div class="flex h-6 overflow-hidden rounded-lg bg-gray-200">
+										<div
+											class="h-full overflow-hidden"
+											style="width: {(
+												(book.progress / book.pages) *
+												100
+											).toFixed()}%; background: var(--color-{statusColors[book.status]})"
+										></div>
+									</div></td
+								>
+
+								<td class="flex justify-end-safe gap-2 px-4 py-2">
+									<button
+										onclick={() => openModal(book)}
+										class="rounded bg-indigo-500 px-4 py-2 text-white hover:bg-blue-400"
+										><FontAwesomeIcon class="size-4" icon={faPencil} /></button
+									>
+									<button
+										onclick={() => deleteBook(book.id)}
+										class="ml-2 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+									>
+										<FontAwesomeIcon class="size-4" icon={faTrashCan} />
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</div>
+	</section>
+</main>
+
+<!-- Modal to edit book -->
+{#if $showModal && $selectedBook}
+	<EditModal
+		showModal={$showModal}
+		selectedBook={$selectedBook}
+		onClose={() => showModal.set(false)}
+		onSave={updateBook}
+	/>
+{/if}
+
+<style lang="postcss">
+</style>

@@ -1,1 +1,8 @@
 @import 'tailwindcss';
+@import '@fontsource/poppins';
+@import '@fontsource/mansalva';
+@import '@fontsource-variable/changa';
+
+body {
+	font-family: 'Poppins', 'Changa Variable', sans-serif;
+}
