@@ -1,38 +1,58 @@
-# sv
+# Reading Tracker
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A web application for tracking your reading progress. Users can add, edit, and delete books, and keep track of their reading status and progress.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- 📚 **Add Books**: Users can add books to their list with details such as title, author, pages, and status.
+- ✏️ **Edit Books**: Modify book details, including progress and status.
+- ❌ **Delete Books**: Remove books from the list after confirmation.
+- 📊 **Statistics**: Track total books, reading progress, and different reading statuses.
+- 💾 **Local Storage**: Books are stored in the browser's local storage for persistent tracking.
+- 🔔 **Modals & Toasts**: Confirmation modals for critical actions and toast notifications for feedback.
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+- **SvelteKit** - Frontend framework
+- **TypeScript** - Typed JavaScript for better maintainability
+- **Tailwind CSS** - Utility-first styling
+- **FontAwesome** - Icons for UI elements
+- **Local Storage** - Temporary storage for book data
 
-## Developing
+## Installation
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/yourusername/reading-tracker.git
+   cd reading-tracker
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Run the development server:
+   ```sh
+   npm run dev
+   ```
+4. Open the app in your browser at `http://localhost:5173`
 
-```bash
-npm run dev
+## Usage
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+- Click the **Add Book** button to add a new book.
+- Click the **Edit** (✏️) button to modify book details.
+- Click the **Delete** (🗑️) button to remove a book after confirmation.
+- View stats in the **Books Stats** section.
 
-## Building
+## Future Improvements
 
-To create a production version of your app:
+- 🔐 User Authentication
+- ☁️ Sync data with a backend (Supabase or another DB)
+- 📱 Responsive enhancements
 
-```bash
-npm run build
-```
+## Contributing
 
-You can preview the production build with `npm run preview`.
+Feel free to fork this project and submit pull requests with improvements or fixes. 🚀
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## License
+
+MIT License
