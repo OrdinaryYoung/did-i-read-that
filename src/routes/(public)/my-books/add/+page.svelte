@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+
+	import { lsAddBook } from '$lib';
 	import { showGModal } from '$lib/stores/modalStore';
 	import { showToast } from '$lib/stores/toastStore';
 
@@ -27,19 +29,7 @@
 			'Are you sure you want to save the new book?',
 			'indigo',
 			async () => {
-				const response = await fetch('/api/books/add', {
-					method: 'POST',
-					body: JSON.stringify({ title, author, pages, status, progress }),
-					headers: { 'Content-Type': 'application/json' }
-				});
-
-				const data = await response.json();
-
-				if (!data.success) {
-					error = data.error || 'Failed to add book';
-					showToast('Failed to add the new book!', 'error');
-					return;
-				}
+				lsAddBook({ title, author, pages, status, progress });
 				showToast('Book added successfully!', 'success');
 				goto('/my-books'); // Redirect after adding
 			},

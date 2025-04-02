@@ -1,4 +1,4 @@
-type Book = {
+export type Book = {
 	id: string; // Unique ID
 	title: string; // Book Title
 	author: string; // Book Author

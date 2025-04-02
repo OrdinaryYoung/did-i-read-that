@@ -11,15 +11,16 @@
 	} from '@fortawesome/free-solid-svg-icons';
 
 	import { EditModal, CustomHeader, StatsUl, StatsLi, formatDate } from '$lib';
+	import type { Book } from '$lib/types';
 	import { showGModal } from '$lib/stores/modalStore';
 	import { showToast } from '$lib/stores/toastStore';
+	import { lsLoadBooks, lsDeleteBook, lsUpdateBook } from '$lib';
 
-	let { data } = $props();
+	let books: Book[] = $state([]);
 
 	let showModal = writable(false); // State to control modal visibility
 	let selectedBook = writable(null); // The book being edited
 
-	let books: Book[] = $state(data.books);
 	let stats = $state({
 		reading: 0,
 		completed: 0,
@@ -44,28 +45,10 @@
 	}
 
 	async function updateBook(updatedBook: Book) {
-		const response = await fetch('/api/books/edit', {
-			method: 'POST',
-			body: JSON.stringify(updatedBook),
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!response.ok) {
-			console.error('Failed to update the book');
-			return;
-		}
-
-		const result = await response.json();
-
-		if (!result.success) {
-			console.error(result.error || 'Failed to update the book');
-			return;
-		}
-		books = books.map((book) => {
-			if (book.id === updatedBook.id) return updatedBook;
-			return book;
-		});
-
+		lsUpdateBook(updatedBook);
+		books = lsLoadBooks();
 		updateStats();
+		showToast('Book Updated successfully!', 'success');
 		showModal.set(false); // Close the modal
 	}
 
@@ -74,22 +57,9 @@
 			'Delete Book?',
 			'Are you sure you want to delete this book? This action cannot be undone.',
 			'red',
-			async () => {
-				const response = await fetch('/api/books/delete', {
-					method: 'POST',
-					body: JSON.stringify({ id: bookId }),
-					headers: { 'Content-Type': 'application/json' }
-				});
-
-				const result = await response.json();
-
-				if (!result.success) {
-					console.error(result.error || 'Failed to delete the book');
-					showToast('Failed to delete the book', 'error');
-					return;
-				}
-
-				books = books.filter((book) => book.id !== bookId);
+			() => {
+				lsDeleteBook(bookId);
+				books = lsLoadBooks();
 				updateStats();
 				showToast('Book deleted successfully!', 'success');
 			},
@@ -110,6 +80,7 @@
 	};
 
 	onMount(() => {
+		books = lsLoadBooks();
 		updateStats();
 	});
 </script>
@@ -295,7 +266,6 @@
 	</section>
 </main>
 
-<!-- Modal to edit book -->
 {#if $showModal && $selectedBook}
 	<EditModal
 		showModal={$showModal}
