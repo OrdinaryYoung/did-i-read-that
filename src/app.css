@@ -2,7 +2,8 @@
 @import '@fontsource/poppins';
 @import '@fontsource/mansalva';
 @import '@fontsource-variable/changa';
+@import '@fontsource/biz-udpgothic';
 
 body {
-	font-family: 'Poppins', 'Changa Variable', sans-serif;
+	font-family: 'Poppins', 'Changa Variable', 'BIZ UDPGothic', sans-serif;
 }
