@@ -4,10 +4,15 @@ import { json } from '@sveltejs/kit';
 import { type Book } from '$lib/types';
 const STORAGE_KEY = 'books';
 
-// Load books from Local Storage
-export function loadBooks(): Book {
+// Load books from Local Storage and sort by updatedAt (newer first)
+export function loadBooks(): Book[] {
 	const books = localStorage.getItem(STORAGE_KEY);
-	return books ? JSON.parse(books) : [];
+	return books
+		? JSON.parse(books).sort(
+				(a: { updatedAt: string | number | Date }, b: { updatedAt: string | number | Date }) =>
+					new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+			)
+		: [];
 }
 
 // Save books to Local Storage
@@ -48,6 +53,7 @@ export function deleteBook(id: string) {
 
 // Update a book in Local Storage
 export function updateBook(updatedBook: Book) {
+	updatedBook.updatedAt = new Date();
 	let books: Book[] = loadBooks();
 	books = books.map((book: Book) => (book.id === updatedBook.id ? updatedBook : book));
 	saveBooks(books);
