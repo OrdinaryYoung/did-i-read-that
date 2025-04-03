@@ -4,6 +4,9 @@
 	import { lsAddBook } from '$lib';
 	import { showGModal } from '$lib/stores/modalStore';
 	import { showToast } from '$lib/stores/toastStore';
+	import { faTurnUp } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { scale } from 'svelte/transition';
 
 	let title = '';
 	let author = '';
@@ -40,9 +43,16 @@
 	}
 </script>
 
-<section class="flex h-screen w-full items-center justify-center">
-	<div class="mx-auto max-w-lg rounded-lg bg-white p-6 md:shadow-md">
-		<h1 class="mb-4 text-2xl font-semibold">Add a New Book</h1>
+<section in:scale={{ duration: 250 }} class="flex h-screen w-full items-center justify-center">
+	<div class="relative mx-auto max-w-lg rounded-lg bg-white p-6 md:shadow-md">
+		<button
+			on:click={() => goto('/my-books')}
+			class="absolute start-5 top-4 size-8 rounded-full p-1 text-gray-600 hover:bg-gray-200"
+		>
+			<FontAwesomeIcon icon={faTurnUp} class="rotate-270 text-xl text-gray-600" />
+		</button>
+
+		<h1 class="mt-8 mb-4 text-2xl font-semibold">Add a New Book</h1>
 
 		{#if error}
 			<p class="text-red-500">{error}</p>
@@ -96,7 +106,10 @@
 				</label>
 			{/if}
 
-			<button type="submit" class="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600">
+			<button
+				type="submit"
+				class="w-full rounded bg-indigo-500 p-2 text-white duration-150 hover:bg-indigo-600"
+			>
 				Add Book
 			</button>
 		</form>
