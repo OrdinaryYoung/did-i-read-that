@@ -107,7 +107,7 @@
 						</p>
 						<div class="flex h-6 overflow-hidden rounded-lg bg-gray-200">
 							<div
-								class="h-full overflow-hidden"
+								class="h-full overflow-hidden duration-750 ease-out"
 								style="width: {(
 									(CONT_BOOK.progress / CONT_BOOK.pages) *
 									100
@@ -135,23 +135,23 @@
 		<hr class="text-gray-200" />
 		<div class="mt-6 flex h-6 overflow-hidden rounded-lg bg-gray-200 md:w-146">
 			<div
-				class="h-full bg-green-500"
+				class="h-full bg-green-500 duration-750 ease-out"
 				style="width: {(stats['reading'] / stats['totalBooks']) * 100}%"
 			></div>
 			<div
-				class="h-full bg-indigo-700"
+				class="h-full bg-indigo-700 duration-750 ease-out"
 				style="width: {(stats['completed'] / stats['totalBooks']) * 100}%"
 			></div>
 			<div
-				class="h-full bg-amber-400"
+				class="h-full bg-amber-400 duration-750 ease-out"
 				style="width: {(stats['on-hold'] / stats['totalBooks']) * 100}%"
 			></div>
 			<div
-				class="h-full bg-red-700"
+				class="h-full bg-red-700 duration-750 ease-out"
 				style="width: {(stats['dropped'] / stats['totalBooks']) * 100}%"
 			></div>
 			<div
-				class="h-full bg-gray-400"
+				class="h-full bg-gray-400 duration-750 ease-out"
 				style="width: {(stats['plan-to-read'] / stats['totalBooks']) * 100}%"
 			></div>
 		</div>
@@ -235,7 +235,7 @@
 								<td class="px-4 py-2">
 									<div class="flex h-6 overflow-hidden rounded-lg bg-gray-200">
 										<div
-											class="h-full overflow-hidden"
+											class="h-full overflow-hidden duration-750 ease-out"
 											style="width: {(
 												(book.progress / book.pages) *
 												100
