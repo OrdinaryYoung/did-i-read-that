@@ -15,16 +15,16 @@
 
 	let updatedBook = $state({ ...selectedBook });
 	function saveChanges() {
-		if (updatedBook.pages < updatedBook.progress) {
-			console.error('Current Page can not be greater than Total Pages');
-			return;
-		}
 		updatedBook.progress =
 			updatedBook.status == 'completed'
 				? updatedBook.pages
 				: updatedBook.status == 'plan-to-read'
 					? 0
 					: updatedBook.progress;
+		if (updatedBook.pages < updatedBook.progress) {
+			console.error('Current Page can not be greater than Total Pages');
+			return;
+		}
 		onSave(updatedBook);
 		onClose();
 	}
