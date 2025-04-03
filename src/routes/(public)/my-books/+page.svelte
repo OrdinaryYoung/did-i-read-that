@@ -221,7 +221,7 @@
 								<td class="px-4 py-2 text-nowrap">{book.title}</td>
 								<td class="px-4 py-2 text-nowrap">{book.author}</td>
 								<td class="px-4 py-2 text-nowrap">{formatDate(book.addedAt)}</td>
-								<td class="px-4 py-2 text-nowrap">{book.status}</td>
+								<td class="px-4 py-2 text-nowrap capitalize">{book.status}</td>
 								<td class="px-8 py-2 text-nowrap"
 									>{formatDate(book.updatedAt)}<br />{formatDate(book.updatedAt, 'time')}</td
 								>
