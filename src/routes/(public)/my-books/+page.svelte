@@ -55,10 +55,10 @@
 		showModal.set(false); // Close the modal
 	}
 
-	function deleteBook(bookId: string) {
+	function deleteBook(bookId: string, bookTitle: string) {
 		showGModal(
 			'Delete Book?',
-			'Are you sure you want to delete this book? This action cannot be undone.',
+			`Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`,
 			'red',
 			() => {
 				lsDeleteBook(bookId);
@@ -309,7 +309,7 @@
 											><FontAwesomeIcon class="size-4" icon={faPencil} /></button
 										>
 										<button
-											onclick={() => deleteBook(book.id)}
+											onclick={() => deleteBook(book.id, book.title)}
 											class="ml-2 rounded bg-red-500 px-4 py-2 text-white duration-150 hover:bg-red-600"
 										>
 											<FontAwesomeIcon class="size-4" icon={faTrashCan} />
