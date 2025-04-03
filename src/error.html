@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>%sveltekit.error.message%</title>
+	</head>
+	<body>
+		<div class="app">
+			<h1 class="status">500</h1>
+			<p class="error-message">%sveltekit.error.message%</p>
+		</div>
+		<div class="custom-dev-messages">
+			<p>Holy guacamole! What's going wrong on our end?</p>
+			<p>
+				Maybe the server's busy reading *War and Peace* instead of serving your request. &#128578;
+			</p>
+			<p class="contant">
+				If this keeps happening, feel free to reach out to support at
+				<a href="mailto:sh.mohdj@gmail.com">sh.mohdj@gmail.com</a>.
+			</p>
+		</div>
+	</body>
+</html>
+
+<style>
+	* {
+		margin: 0;
+		padding: 0 8px;
+		box-sizing: border-box;
+	}
+	body {
+		display: grid;
+		height: 100vh;
+		background-color: #d6d6d6;
+		place-content: center;
+		font-family: 'Poopins', sans-serif;
+		row-gap: 1rem;
+	}
+	.app {
+		display: flex;
+		flex-direction: column;
+	}
+	.app .status {
+		font-size: 5rem;
+		color: #ff2000;
+	}
+	.app .error-message {
+		font-size: 1.5rem;
+		font-weight: 700;
+	}
+	.custom-dev-messages {
+		display: flex;
+		flex-direction: column;
+		row-gap: 0.5rem;
+		font-size: larger;
+	}
+	.contant {
+		margin-top: 2rem;
+	}
+</style>
