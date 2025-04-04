@@ -91,16 +91,6 @@
 			progress: 290,
 			addedAt: '2025-03-15T07:25:45.678Z',
 			updatedAt: '2025-03-22T14:19:33.901Z'
-		},
-		{
-			id: 'c1d2e3f4-b5a6-7890-bc12-de34fa56gb78',
-			title: 'The Broken Compass',
-			author: 'Henry J. Mitchell',
-			pages: 400,
-			status: 'reading',
-			progress: 175,
-			addedAt: '2025-03-10T09:05:30.234Z',
-			updatedAt: '2025-03-29T20:30:25.567Z'
 		}
 	];
 
