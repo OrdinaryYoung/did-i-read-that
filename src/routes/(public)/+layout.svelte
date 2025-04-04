@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { Header } from '$lib/components';
+	import { Footer, Header } from '$lib/components';
 
 	let { children } = $props();
 </script>
 
 <Header />
 {@render children()}
+<Footer />

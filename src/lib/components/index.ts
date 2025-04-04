@@ -1,4 +1,5 @@
 export { default as Header } from './layout/Header.svelte';
+export { default as Footer } from './layout/Footer.svelte';
 export { default as Modal } from './modals/Modal.svelte';
 export { default as GlobalModal } from './modals/GlobalModal.svelte';
 export { default as EditModal } from './modals/EditModal.svelte';
