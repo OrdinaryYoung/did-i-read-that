@@ -42,6 +42,7 @@
 					id="progress"
 					type="number"
 					placeholder="Total Pages"
+					min="0"
 					max={$updatedBook.pages}
 					bind:value={$updatedBook.progress}
 				/>
