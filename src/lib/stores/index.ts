@@ -1,2 +1,2 @@
-export { openModal, modal, closeModal } from './modal';
+export { openModal, modalStack, closeModal } from './modal';
 export { showToast, toasts } from './toast';

@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 import type { Component } from 'svelte';
 import type { ModalConfig } from '$lib/types';
 
-export const modal = writable<ModalConfig>({ isOpen: false });
+export const modalStack = writable<ModalConfig[]>([]);
 
 export function openModal(
 	component: Component | null,
@@ -16,20 +16,44 @@ export function openModal(
 	confirmText = 'Confirm',
 	cancelText = 'Cancel'
 ) {
-	modal.set({
-		isOpen: true,
-		component,
-		size,
-		title,
-		message,
-		color,
-		data,
-		confirmText,
-		cancelText,
-		onConfirm
-	});
+	try {
+		modalStack.update((stack) => [
+			...stack,
+			{
+				isOpen: true,
+				component,
+				size,
+				title,
+				message,
+				color,
+				data,
+				confirmText,
+				cancelText,
+				onConfirm
+			}
+		]);
+	} catch (error) {
+		throw Error('Error opening modal: ' + error);
+	}
 }
 
 export function closeModal() {
-	modal.set({ isOpen: false });
+	try {
+		modalStack.update((stack) => {
+			if (stack.length > 0) {
+				stack.pop(); // Remove only the top modal
+			}
+			return [...stack];
+		});
+	} catch (error) {
+		throw Error('Error closing modal: ' + error);
+	}
+}
+
+export function closeAllModals() {
+	try {
+		modalStack.set([]); // Clears all modals
+	} catch (error) {
+		throw Error('Error closing all modals: ' + error);
+	}
 }

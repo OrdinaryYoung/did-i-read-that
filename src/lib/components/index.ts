@@ -1,3 +1,4 @@
+export { default as FeedbackMessage } from './forms/messages/FeedbackMessage.svelte';
 export { default as Header } from './layout/Header.svelte';
 export { default as Footer } from './layout/Footer.svelte';
 export { default as Modal } from './modals/Modal.svelte';

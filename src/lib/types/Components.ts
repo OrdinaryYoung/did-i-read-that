@@ -1,14 +1,13 @@
 import type { Component } from 'svelte';
 
 export type ModalConfig = {
-	isOpen: boolean;
-	component?: Component | null;
+	component: Component | null;
 	size?: 'small' | 'medium' | 'large' | 'form';
 	title?: string;
 	color?: string;
-	data?: object;
+	data?: Record<string, any>; // More flexible than `object`
 	message?: string;
 	confirmText?: string;
 	cancelText?: string;
-	onConfirm?: (...args: any[]) => void;
+	onConfirm?: (...args: unknown[]) => void;
 };

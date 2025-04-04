@@ -4,85 +4,106 @@
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTurnUp } from '@fortawesome/free-solid-svg-icons';
-	import { GlobalModal } from '$lib/components';
+	import { FeedbackMessage, GlobalModal } from '$lib/components';
 	import { openModal, showToast } from '$lib/stores';
 	import { AddBookStorage } from '$lib/utils';
+	import { MAX_AUTHOR_LENGTH, MAX_PAGES, MAX_TITLE_LENGTH } from '$lib/constants';
 
 	import type { Book } from '$lib/types';
+	import {
+		validateAuthor,
+		validatePages,
+		validateProgress,
+		validateTitle
+	} from '$lib/utils/validate/book';
 
-	let book: Book = {
+	let book: Book = $state({
 		id: '',
 		addedAt: '',
 		updatedAt: '',
 		title: '',
 		author: '',
-		pages: 0,
+		pages: 1,
 		progress: 0,
 		status: 'plan-to-read'
-	};
+	});
 
-	let error = '';
+	let feedbackMessage: string = $state('');
 
 	const addBook = () => {
-		error = '';
+		try {
+			book.progress =
+				book.status == 'completed' ? book.pages : book.status == 'plan-to-read' ? 0 : book.progress;
 
-		if (!book.title || !book.author || book.pages <= 0) {
-			error = 'Title, Author, and Pages are required.';
-			return;
+			const vt = validateTitle(book.title);
+			if (vt) throw vt;
+
+			const va = validateAuthor(book.author);
+			if (va) throw va;
+
+			const vpg = validatePages(book.pages);
+			if (vpg) throw vpg;
+
+			const vpr = validateProgress(book.progress, book.status, book.pages);
+			if (vpr) throw vpr;
+			openModal(
+				GlobalModal,
+				'medium',
+				'Add Book?',
+				'Are you sure you want to save the new book?',
+				'indigo',
+				{},
+				() => {
+					AddBookStorage(book);
+					showToast('Book added successfully!', 'success');
+					goto('/my-books');
+				},
+				'Add',
+				'Back'
+			);
+		} catch (error: any) {
+			feedbackMessage = error;
+			console.error(error);
 		}
-		book.progress =
-			book.status == 'completed' ? book.pages : book.status == 'plan-to-read' ? 0 : book.progress;
-		if (book.progress > book.pages) {
-			error = 'Current Page can not be greater than Total Pages';
-			return;
-		}
+	};
+
+	const discardBook = () => {
 		openModal(
 			GlobalModal,
 			'medium',
-			'Add Book?',
-			'Are you sure you want to save the new book?',
-			'indigo',
+			'Discard new Book?',
+			'Are you sure you want to go back without saving?',
+			'red',
 			{},
-			() => {
-				AddBookStorage(book);
-				showToast('Book added successfully!', 'success');
-				goto('/my-books');
-			},
-			'Add',
-			'Back'
+			() => goto('/my-books'),
+			'Discard',
+			'Cancel'
 		);
 	};
 </script>
 
 <section in:scale={{ duration: 250 }}>
 	<div class="modal-wrapper">
-		<button class="back-btn" on:click={() => goto('/my-books')}>
+		<button class="back-btn" onclick={discardBook}>
 			<FontAwesomeIcon icon={faTurnUp} class="rotate-270 text-xl text-gray-600" />
 		</button>
 		<h2>Add a New Book</h2>
 
-		{#if error}
-			<p>{error}</p>
+		{#if feedbackMessage}
+			<FeedbackMessage message={feedbackMessage} type="error" width="medium" />
 		{/if}
-
-		<form on:submit|preventDefault={addBook}>
-			<label>
-				Book Title
-				<input type="text" placeholder="Book Title" bind:value={book.title} />
+		<form>
+			<label for="title"
+				>Title
+				<input id="title" maxlength={MAX_TITLE_LENGTH} bind:value={book.title} />
 			</label>
-			<label>
-				Book Author
-				<input bind:value={book.author} />
+			<label for="author"
+				>Author
+				<input id="author" maxlength={MAX_AUTHOR_LENGTH} bind:value={book.author} />
 			</label>
-
-			<label>
-				Total Pages
-				<input type="number" placeholder="Total Pages" bind:value={book.pages} />
-			</label>
-
-			<label>
-				Book Status
-				<select bind:value={book.status}>
+			<label for="status"
+				>Status
+				<select id="status" bind:value={book.status}>
 					<option value="plan-to-read">Plan to Read</option>
 					<option value="reading">Reading</option>
 					<option value="completed">Completed</option>
@@ -90,26 +111,30 @@
 					<option value="dropped">Dropped</option>
 				</select>
 			</label>
+			<label for="pages"
+				>Pages
+				<input id="pages" type="number" min="1" max={MAX_PAGES} bind:value={book.pages} />
+			</label>
+
 			{#if book.status !== 'completed' && book.status !== 'plan-to-read'}
 				<label for="progress">
 					Current Page
 					<input
 						id="progress"
 						type="number"
-						placeholder="Total Pages"
+						placeholder="Number of book's pages"
 						min="0"
 						max={book.pages}
 						bind:value={book.progress}
 					/>
 				</label>
 			{/if}
-			<div class="actions">
-				<button type="button" class="cancel-btn" on:click={() => goto('/my-books')}>
-					Cancel
-				</button>
-				<button type="submit" class="confirm-btn"> Add Book </button>
-			</div>
 		</form>
+
+		<div class="actions">
+			<button class="cancel-btn" onclick={discardBook}> Back </button>
+			<button type="submit" class="confirm-btn" onclick={addBook}> Add Book </button>
+		</div>
 	</div>
 </section>
 
@@ -126,9 +151,6 @@
 	}
 	.modal-wrapper h2 {
 		@apply mt-8 mb-4 text-lg font-bold md:text-xl;
-	}
-	.modal-wrapper p {
-		@apply text-red-500;
 	}
 	form {
 		@apply mb-4 flex flex-col gap-4;

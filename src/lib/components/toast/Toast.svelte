@@ -19,6 +19,8 @@
 			class:bg-green-500={toast.type === 'success'}
 			class:bg-red-500={toast.type === 'error'}
 			class:bg-blue-500={toast.type === 'info'}
+			class:bg-amber-500={toast.type === 'warning'}
+			class:bg-gray-500={toast.type === 'network'}
 		>
 			<FontAwesomeIcon
 				icon={toast.type === 'success'

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fly, scale, slide } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
 	import { inview } from 'svelte-inview';
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -23,6 +23,12 @@
 	import { formatDate, LoadBooksStorage, UpdateBookStorage, DeleteBookStorage } from '$lib/utils';
 
 	import type { Book } from '$lib/types';
+	import {
+		validateAuthor,
+		validatePages,
+		validateProgress,
+		validateTitle
+	} from '$lib/utils/validate/book';
 
 	let books: Book[] = $state([]);
 
@@ -48,52 +54,84 @@
 	let ProgressIsInView: boolean = $state(false);
 	let barIsInView: boolean = $state(false);
 
-	const updateBook = (updatedBook: Book) => {
-		openModal(
-			EditModal,
-			'form',
-			`Edit ${updatedBook.title}`,
-			'',
-			'green',
-			updatedBook,
-			(book: Book) => {
-				book.progress =
-					book.status == 'completed'
-						? book.pages
-						: book.status == 'plan-to-read'
-							? 0
-							: book.progress;
-				if (book.pages < book.progress) {
-					console.error('Current Page can not be greater than Total Pages');
-					return;
-				}
-				UpdateBookStorage(book);
-				books = LoadBooksStorage();
-				updateStats();
-				showToast('Book Updated successfully!', 'success');
-			},
-			'Save',
-			'Discard'
-		);
+	const updateBook = (book: Book) => {
+		try {
+			openModal(
+				EditModal,
+				'form',
+				`Edit ${book.title}`,
+				'',
+				'green',
+				book,
+				(updatedBook: Book) => {
+					try {
+						updatedBook.progress =
+							updatedBook.status == 'completed'
+								? updatedBook.pages
+								: updatedBook.status == 'plan-to-read'
+									? 0
+									: updatedBook.progress;
+
+						const vt = validateTitle(updatedBook.title);
+						if (vt) throw vt;
+
+						const va = validateAuthor(updatedBook.author);
+						if (va) throw va;
+
+						const vpg = validatePages(updatedBook.pages);
+						if (vpg) throw vpg;
+
+						const vpr = validateProgress(
+							updatedBook.progress,
+							updatedBook.status,
+							updatedBook.pages
+						);
+						if (vpr) throw vpr;
+
+						UpdateBookStorage(updatedBook);
+						books = LoadBooksStorage();
+						updateStats();
+						showToast('Book Updated successfully!', 'success');
+					} catch (error) {
+						console.error('Error updating book:', error);
+						throw Error(error as string);
+					}
+				},
+				'Save',
+				'Discard'
+			);
+		} catch (error) {
+			showToast('Error updating book.. Please try later!', 'error');
+			console.error(error);
+		}
 	};
 
-	const deleteBook = (bookId: string, bookTitle: string) => {
-		openModal(
-			GlobalModal,
-			'medium',
-			'Delete Book?',
-			`Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`,
-			'red',
-			{},
-			() => {
-				DeleteBookStorage(bookId);
-				books = LoadBooksStorage();
-				updateStats();
-				showToast('Book deleted successfully!', 'success');
-			},
-			'Delete',
-			'Cancel'
-		);
+	const deleteBook = (book: Book) => {
+		try {
+			openModal(
+				GlobalModal,
+				'medium',
+				'Delete Book?',
+				`Are you sure you want to delete "${book.title}"? This action cannot be undone.`,
+				'red',
+				{},
+				() => {
+					try {
+						DeleteBookStorage(book.id);
+						books = LoadBooksStorage();
+						showToast('Book deleted successfully!', 'success');
+						updateStats();
+					} catch (error) {
+						throw Error('Error deleting book: ' + error);
+					}
+				},
+				'Delete',
+				'Cancel'
+			);
+		} catch (error) {
+			showToast('Error deleting book.. Please try later!', 'error');
+			console.error(error);
+		}
 	};
 
 	const updateStats = () => {
@@ -118,7 +156,7 @@
 {#if isPageLoading}
 	<LoadingModal />
 {:else}
-	<main
+	<section
 		class="container mx-auto px-4 pb-16"
 		in:scale={{ duration: 500, delay: 10, easing: (t) => t * t }}
 	>
@@ -327,7 +365,7 @@
 											><FontAwesomeIcon class="size-4" icon={faPencil} /></button
 										>
 										<button
-											onclick={() => deleteBook(book.id, book.title)}
+											onclick={() => deleteBook(book)}
 											class="ml-2 rounded bg-red-500 px-4 py-2 text-white duration-150 hover:bg-red-600"
 										>
 											<FontAwesomeIcon class="size-4" icon={faTrashCan} />
@@ -340,7 +378,7 @@
 				{/if}
 			</div>
 		</section>
-	</main>
+	</section>
 {/if}
 
 <style lang="postcss">

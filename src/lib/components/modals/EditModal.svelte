@@ -1,24 +1,54 @@
 <script lang="ts">
 	import { writable } from 'svelte/store';
-	import { closeModal } from '$lib/stores';
 
+	import { FeedbackMessage, GlobalModal } from '$lib/components';
 	import type { ModalConfig, Book } from '$lib/types';
+	import { closeModal, openModal } from '$lib/stores';
+	import { MAX_AUTHOR_LENGTH, MAX_PAGES, MAX_TITLE_LENGTH } from '$lib/constants';
 
 	let { modalConfig } = $props() as { modalConfig: ModalConfig };
 
 	let updatedBook = writable({ ...(modalConfig.data as Book) });
+
+	let feedbackMessage: string = $state('');
+
+	const updateBook = () => {
+		try {
+			modalConfig.onConfirm?.($updatedBook);
+			closeModal();
+		} catch (error: any) {
+			feedbackMessage = error.message;
+		}
+	};
+
+	const discardBook = () => {
+		openModal(
+			GlobalModal,
+			'medium',
+			'Discard new Book?',
+			'Are you sure you want to go back without saving?',
+			'red',
+			{},
+			() => closeModal(),
+			'Discard',
+			'Cancel'
+		);
+	};
 </script>
 
 <div class="wrapper">
 	<h2>Edit Book</h2>
+	{#if feedbackMessage}
+		<FeedbackMessage message={feedbackMessage} type="error" width="medium" />
+	{/if}
 	<form>
 		<label for="title"
 			>Title
-			<input id="title" bind:value={$updatedBook.title} />
+			<input id="title" maxlength={MAX_TITLE_LENGTH} bind:value={$updatedBook.title} />
 		</label>
 		<label for="author"
 			>Author
-			<input id="author" bind:value={$updatedBook.author} />
+			<input id="author" maxlength={MAX_AUTHOR_LENGTH} bind:value={$updatedBook.author} />
 		</label>
 		<label for="status"
 			>Status
@@ -26,13 +56,13 @@
 				<option value="plan-to-read">Plan to Read</option>
 				<option value="reading">Reading</option>
 				<option value="completed">Completed</option>
-				<option value="on-hold">Hold</option>
+				<option value="on-hold">On Hold</option>
 				<option value="dropped">Dropped</option>
 			</select>
 		</label>
 		<label for="pages"
 			>Pages
-			<input id="pages" type="number" bind:value={$updatedBook.pages} />
+			<input id="pages" type="number" min="1" max={MAX_PAGES} bind:value={$updatedBook.pages} />
 		</label>
 
 		{#if $updatedBook.status !== 'completed' && $updatedBook.status !== 'plan-to-read'}
@@ -41,7 +71,7 @@
 				<input
 					id="progress"
 					type="number"
-					placeholder="Total Pages"
+					placeholder="Number of book's pages"
 					min="0"
 					max={$updatedBook.pages}
 					bind:value={$updatedBook.progress}
@@ -50,15 +80,12 @@
 		{/if}
 	</form>
 	<div class="actions">
-		<button class="cancel-btn" onclick={closeModal}>
+		<button class="cancel-btn" onclick={discardBook}>
 			{modalConfig.cancelText}
 		</button>
 		<button
 			class="confirm-btn bg-{modalConfig.color}-500 hover:bg-{modalConfig.color}-600"
-			onclick={() => {
-				modalConfig.onConfirm?.($updatedBook);
-				closeModal();
-			}}
+			onclick={updateBook}
 		>
 			{modalConfig.confirmText}
 		</button>

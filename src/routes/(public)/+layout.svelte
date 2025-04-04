@@ -5,5 +5,7 @@
 </script>
 
 <Header />
-{@render children()}
+<main class="flex min-h-[calc(100vh-9rem)] flex-col">
+	{@render children()}
+</main>
 <Footer />
