@@ -2,27 +2,29 @@
 	import { onMount } from 'svelte';
 	import { fly, scale, slide } from 'svelte/transition';
 	import { inview } from 'svelte-inview';
-	import { writable } from 'svelte/store';
+
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCirclePlus,
 		faChartSimple,
 		faBookOpen,
 		faPencil,
-		faTrashCan,
-		faCircleNotch
+		faTrashCan
 	} from '@fortawesome/free-solid-svg-icons';
 
-	import { EditModal, CustomHeader, StatsUl, StatsLi, formatDate } from '$lib';
+	import {
+		GlobalModal,
+		EditModal,
+		StatusIndicatorUl,
+		StatusIndicatorLi,
+		LoadingModal
+	} from '$lib/components';
+	import { openModal, showToast } from '$lib/stores';
+	import { formatDate, LoadBooksStorage, UpdateBookStorage, DeleteBookStorage } from '$lib/utils';
+
 	import type { Book } from '$lib/types';
-	import { showGModal } from '$lib/stores/modalStore';
-	import { showToast } from '$lib/stores/toastStore';
-	import { lsLoadBooks, lsDeleteBook, lsUpdateBook } from '$lib';
 
 	let books: Book[] = $state([]);
-
-	let showModal = writable(false); // State to control modal visibility
-	let selectedBook = writable(null); // The book being edited
 
 	let stats = $state({
 		reading: 0,
@@ -42,34 +44,57 @@
 		dropped: 'red-700'
 	};
 
-	function openModal(book: Book) {
-		selectedBook.set(book); // Set the book to be edited
-		showModal.set(true); // Show the modal
-	}
+	let isPageLoading: boolean = $state(true);
+	let ProgressIsInView: boolean = $state(false);
+	let barIsInView: boolean = $state(false);
 
-	async function updateBook(updatedBook: Book) {
-		lsUpdateBook(updatedBook);
-		books = lsLoadBooks();
-		updateStats();
-		showToast('Book Updated successfully!', 'success');
-		showModal.set(false); // Close the modal
-	}
+	const updateBook = (updatedBook: Book) => {
+		openModal(
+			EditModal,
+			'form',
+			`Edit ${updatedBook.title}`,
+			'',
+			'green',
+			updatedBook,
+			(book: Book) => {
+				book.progress =
+					book.status == 'completed'
+						? book.pages
+						: book.status == 'plan-to-read'
+							? 0
+							: book.progress;
+				if (book.pages < book.progress) {
+					console.error('Current Page can not be greater than Total Pages');
+					return;
+				}
+				UpdateBookStorage(book);
+				books = LoadBooksStorage();
+				updateStats();
+				showToast('Book Updated successfully!', 'success');
+			},
+			'Save',
+			'Discard'
+		);
+	};
 
-	function deleteBook(bookId: string, bookTitle: string) {
-		showGModal(
+	const deleteBook = (bookId: string, bookTitle: string) => {
+		openModal(
+			GlobalModal,
+			'medium',
 			'Delete Book?',
 			`Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`,
 			'red',
+			{},
 			() => {
-				lsDeleteBook(bookId);
-				books = lsLoadBooks();
+				DeleteBookStorage(bookId);
+				books = LoadBooksStorage();
 				updateStats();
 				showToast('Book deleted successfully!', 'success');
 			},
 			'Delete',
 			'Cancel'
 		);
-	}
+	};
 
 	const updateStats = () => {
 		stats.totalBooks = books.length;
@@ -77,35 +102,22 @@
 
 		Object.keys(stats).forEach((status) => {
 			if (status !== 'totalBooks' && status !== 'totalPages') {
-				stats[status] = books.filter((book) => book.status === status).length;
+				stats[status as keyof typeof stats] = books.filter((book) => book.status === status).length;
 			}
 		});
 	};
 
-	let isPageLoading: boolean = $state(true);
-	let ProgressIsInView: boolean = $state(false);
-	let barIsInView: boolean = $state(false);
 	onMount(() => {
 		isPageLoading = true;
-		books = lsLoadBooks();
+		books = LoadBooksStorage();
 		updateStats();
 		isPageLoading = false;
 	});
 </script>
 
 {#if isPageLoading}
-	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center px-4">
-		<div
-			in:fly={{ duration: 150, y: -100, easing: (t) => t * t }}
-			out:fly={{ duration: 400, y: -100, easing: (t) => t * t }}
-			class="fixed start-1/2 top-10 z-50 flex w-75 translate-x-[-50%] flex-col items-center justify-center gap-4 rounded-lg bg-white py-4 shadow-lg"
-		>
-			<FontAwesomeIcon icon={faCircleNotch} class="size-12 animate-spin text-gray-800" />
-			<p class="ml-2 text-xl">Loading...</p>
-		</div>
-	</div>
+	<LoadingModal />
 {:else}
-	<CustomHeader />
 	<main
 		class="container mx-auto px-4 pb-16"
 		in:scale={{ duration: 500, delay: 10, easing: (t) => t * t }}
@@ -200,13 +212,17 @@
 				></div>
 			</div>
 			<div class="mt-4 flex flex-col gap-16 md:w-xl md:flex-row">
-				<StatsUl>
-					<StatsLi color="text-green-500" type="Reading" value={stats.reading} />
-					<StatsLi color="text-indigo-700" type="Completed" value={stats.completed} />
-					<StatsLi color="text-amber-400" type="On-Hold" value={stats['on-hold']} />
-					<StatsLi color="text-red-700" type="Dropped" value={stats.dropped} />
-					<StatsLi color="text-gray-400" type="Plan to Read" value={stats['plan-to-read']} />
-				</StatsUl>
+				<StatusIndicatorUl>
+					<StatusIndicatorLi color="text-green-500" type="Reading" value={stats.reading} />
+					<StatusIndicatorLi color="text-indigo-700" type="Completed" value={stats.completed} />
+					<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={stats['on-hold']} />
+					<StatusIndicatorLi color="text-red-700" type="Dropped" value={stats.dropped} />
+					<StatusIndicatorLi
+						color="text-gray-400"
+						type="Plan to Read"
+						value={stats['plan-to-read']}
+					/>
+				</StatusIndicatorUl>
 				<ul class="flex grow flex-col gap-1">
 					<li class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
@@ -304,7 +320,9 @@
 
 									<td class="flex grow items-center justify-end-safe gap-2 px-4 py-2">
 										<button
-											onclick={() => openModal(book)}
+											onclick={() => {
+												updateBook(book);
+											}}
 											class="rounded bg-indigo-500 px-4 py-2 text-white duration-150 hover:bg-blue-400"
 											><FontAwesomeIcon class="size-4" icon={faPencil} /></button
 										>
@@ -323,15 +341,6 @@
 			</div>
 		</section>
 	</main>
-
-	{#if $showModal && $selectedBook}
-		<EditModal
-			showModal={$showModal}
-			selectedBook={$selectedBook}
-			onClose={() => showModal.set(false)}
-			onSave={updateBook}
-		/>
-	{/if}
 {/if}
 
 <style lang="postcss">

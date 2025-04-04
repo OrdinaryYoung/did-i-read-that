@@ -15,8 +15,13 @@ export type Book = {
 	status: 'plan-to-read' | 'reading' | 'completed' | 'on-hold' | 'dropped'; // Reading Status
 	rating?: number; // 1-5 stars (optional)
 	notes?: string; // Personal Notes
-	addedAt: Date;
-	updatedAt: Date;
+	addedAt: Date | string; // Date added to the list
+	updatedAt: Date | string; // Date last updated
 	startedAt?: Date; // Date started reading (optional)
 	finishedAt?: Date; // Date finished (optional)
+};
+export type BookStatus = 'plan-to-read' | 'reading' | 'completed' | 'on-hold' | 'dropped'; // Reading Status
+export type BookStatusLabel = {
+	label: string;
+	color: string;
 };

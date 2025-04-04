@@ -2,7 +2,8 @@
 	import '../app.css';
 	import { page } from '$app/state';
 
-	import { GlobalModal, Toast } from '$lib';
+	import { Modal, Toast } from '$lib/components';
+
 	let { children } = $props();
 </script>
 
@@ -10,8 +11,7 @@
 	<title>{page.data.title || 'Did I Read That?'}</title>
 </svelte:head>
 
-<GlobalModal />
-
 {@render children()}
 
+<Modal />
 <Toast />
