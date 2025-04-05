@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTurnUp } from '@fortawesome/free-solid-svg-icons';
@@ -9,31 +9,27 @@
 	import { AddBookStorage } from '$lib/utils';
 	import { MAX_AUTHOR_LENGTH, MAX_PAGES, MAX_TITLE_LENGTH } from '$lib/constants';
 
-	import type { Book } from '$lib/types';
-	import {
-		validateAuthor,
-		validatePages,
-		validateProgress,
-		validateTitle
-	} from '$lib/utils/validate/book';
+	import type { TrackedBook } from '$lib/types';
+	import { validateAuthor, validatePages, validateProgress, validateTitle } from '$lib/utils';
 
-	let book: Book = $state({
+	let book: TrackedBook = $state({
 		id: '',
-		addedAt: '',
-		updatedAt: '',
 		title: '',
 		author: '',
+		added_at: '',
+		status: 'plan-to-read',
+		updated_at: '',
 		pages: 1,
-		progress: 0,
-		status: 'plan-to-read'
+		done: 0,
+		done_percent: 0
 	});
 
 	let feedbackMessage: string = $state('');
 
 	const addBook = () => {
 		try {
-			book.progress =
-				book.status == 'completed' ? book.pages : book.status == 'plan-to-read' ? 0 : book.progress;
+			book.done =
+				book.status == 'completed' ? book.pages : book.status == 'plan-to-read' ? 0 : book.done;
 
 			const vt = validateTitle(book.title);
 			if (vt) throw vt;
@@ -44,7 +40,7 @@
 			const vpg = validatePages(book.pages);
 			if (vpg) throw vpg;
 
-			const vpr = validateProgress(book.progress, book.status, book.pages);
+			const vpr = validateProgress(book.done, book.status, book.pages);
 			if (vpr) throw vpr;
 			openModal(
 				GlobalModal,
@@ -117,15 +113,15 @@
 			</label>
 
 			{#if book.status !== 'completed' && book.status !== 'plan-to-read'}
-				<label for="progress">
-					Current Page
+				<label for="done" in:fade>
+					Achieved Page
 					<input
-						id="progress"
+						id="done"
 						type="number"
-						placeholder="Number of book's pages"
+						placeholder="Number of pages you have read"
 						min="0"
 						max={book.pages}
-						bind:value={book.progress}
+						bind:value={book.done}
 					/>
 				</label>
 			{/if}

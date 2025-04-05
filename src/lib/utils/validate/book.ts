@@ -1,7 +1,7 @@
 import { MAX_AUTHOR_LENGTH, MAX_PAGES, MAX_TITLE_LENGTH } from '$lib/constants';
-import type { Book } from '$lib/types';
+import type { TrackedBook } from '$lib/types';
 
-export function validateTitle(title: Book['title']) {
+export function validateTitle(title: TrackedBook['title']) {
 	if (!title.trim()) {
 		return 'Title cannot be empty.';
 	}
@@ -11,7 +11,7 @@ export function validateTitle(title: Book['title']) {
 	return '';
 }
 
-export function validateAuthor(author: Book['author']) {
+export function validateAuthor(author: TrackedBook['author']) {
 	if (!author.trim()) {
 		return 'Author cannot be empty.';
 	}
@@ -21,7 +21,7 @@ export function validateAuthor(author: Book['author']) {
 	return '';
 }
 
-export function validatePages(pages: Book['pages']) {
+export function validatePages(pages: TrackedBook['pages']) {
 	if (!pages || pages <= 0) {
 		return 'Pages must be a positive number.';
 	}
@@ -32,9 +32,9 @@ export function validatePages(pages: Book['pages']) {
 }
 
 export function validateProgress(
-	progress: Book['progress'],
-	status: Book['status'],
-	pages: Book['pages']
+	progress: TrackedBook['done'],
+	status: TrackedBook['status'],
+	pages: TrackedBook['pages']
 ) {
 	if (status !== 'completed' && status !== 'plan-to-read') {
 		if (progress < 0 || progress > pages) {

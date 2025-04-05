@@ -1,44 +1,56 @@
 import 'crypto';
-import { json } from '@sveltejs/kit';
 
-import { type Book } from '$lib/types';
+import { type TrackedBook, type LocalStorage } from '$lib/types';
+import { sortBooks } from './format';
 
-const STORAGE_KEY = 'books';
+const STORAGE_BOOKS = 'books';
+const STORAGE_SORT = 'sortBy';
+const STORAGE_SORT_ACS = 'isAcscending';
 
-// Load books from Local Storage and sort by updatedAt (newer first)
-export function loadBooks(): Book[] {
-	const books = localStorage.getItem(STORAGE_KEY);
-	return books
-		? JSON.parse(books).sort(
-				(a: { updatedAt: string | number | Date }, b: { updatedAt: string | number | Date }) =>
-					new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-			)
-		: [];
+export function loadStorage(): LocalStorage {
+	const books: TrackedBook[] = loadBooks();
+
+	const sortBy: string = localStorage.getItem(STORAGE_SORT) || 'updated_at';
+	const isAcscending: boolean = localStorage.getItem(STORAGE_SORT_ACS) === 'true' ? true : false;
+
+	return {
+		books: sortBooks(books, sortBy as keyof TrackedBook, isAcscending),
+		sortBy,
+		isAcscending
+	};
 }
 
-// Save books to Local Storage
-export function saveBooks(books: Book[]) {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+// Load books from Local Storage and sort by updatedAt (newer first)
+export function loadBooks(): TrackedBook[] {
+	const books = localStorage.getItem(STORAGE_BOOKS);
+	return books ? JSON.parse(books) : [];
+}
+
+// Save into the Local Storage
+export function saveBooks(books: TrackedBook[]) {
+	localStorage.setItem(STORAGE_BOOKS, JSON.stringify(books));
+}
+export function saveSortBy(sortBy: keyof TrackedBook, isAcscending: boolean) {
+	localStorage.setItem(STORAGE_SORT, sortBy);
+	localStorage.setItem(STORAGE_SORT_ACS, JSON.stringify(isAcscending));
 }
 
 // Add a new book to Local Storage
-export function addBook(book: Book) {
-	const { title, author, pages, status, progress }: Book = book;
-	const books: Book[] = loadBooks();
+export function addBook(book: TrackedBook) {
+	const { title, author, status, pages, done }: TrackedBook = book;
+	const books: TrackedBook[] = loadBooks();
 
-	if (!title || !author || pages <= 0 || progress == null) {
-		return json({ error: 'Title, Author, Progress, and Pages are required.' }, { status: 400 });
-	}
 	const DATE = new Date();
-	const newBook: Book = {
+	const newBook: TrackedBook = {
 		id: crypto.randomUUID(),
 		title,
 		author,
-		pages,
+		added_at: DATE,
 		status,
-		progress,
-		addedAt: DATE,
-		updatedAt: DATE
+		updated_at: DATE,
+		pages,
+		done,
+		done_percent: done / pages
 	};
 	books.push(newBook);
 
@@ -47,15 +59,14 @@ export function addBook(book: Book) {
 
 // Delete a book from Local Storage
 export function deleteBook(id: string) {
-	let books: Book[] = loadBooks();
-	books = books.filter((book: Book) => book.id !== id);
+	let books: TrackedBook[] = loadBooks();
+	books = books.filter((book: TrackedBook) => book.id !== id);
 	saveBooks(books);
 }
 
 // Update a book in Local Storage
-export function updateBook(updatedBook: Book) {
-	updatedBook.updatedAt = new Date();
-	let books: Book[] = loadBooks();
-	books = books.map((book: Book) => (book.id === updatedBook.id ? updatedBook : book));
+export function updateBook(updatedBook: TrackedBook) {
+	let books: TrackedBook[] = loadBooks();
+	books = books.map((book: TrackedBook) => (book.id === updatedBook.id ? updatedBook : book));
 	saveBooks(books);
 }

@@ -8,7 +8,9 @@
 <li>
 	<div class="wrapper">
 		<FontAwesomeIcon icon={faCircle} class="size-4 {color}" />
-		<a href="/my-books/{type.toLowerCase().split(' ').join('-')}">{type}</a>
+		<!-- <a href="/my-books/{type.toLowerCase().split(' ').join('-')}">{type}</a> -->
+		<!--TODO: Pages for each stat-->
+		<a href="/my-books/#Soon">{type}</a>
 	</div>
 	<p>{value}</p>
 </li>

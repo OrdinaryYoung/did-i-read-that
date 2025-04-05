@@ -2,13 +2,13 @@
 	import { writable } from 'svelte/store';
 
 	import { FeedbackMessage, GlobalModal } from '$lib/components';
-	import type { ModalConfig, Book } from '$lib/types';
+	import type { ModalConfig, TrackedBook } from '$lib/types';
 	import { closeModal, openModal } from '$lib/stores';
 	import { MAX_AUTHOR_LENGTH, MAX_PAGES, MAX_TITLE_LENGTH } from '$lib/constants';
 
 	let { modalConfig } = $props() as { modalConfig: ModalConfig };
 
-	let updatedBook = writable({ ...(modalConfig.data as Book) });
+	let updatedBook = writable({ ...(modalConfig.data as TrackedBook) });
 
 	let feedbackMessage: string = $state('');
 
@@ -66,15 +66,15 @@
 		</label>
 
 		{#if $updatedBook.status !== 'completed' && $updatedBook.status !== 'plan-to-read'}
-			<label for="progress">
-				Current Page
+			<label for="done">
+				Achieved Page
 				<input
-					id="progress"
+					id="done"
 					type="number"
-					placeholder="Number of book's pages"
+					placeholder="Number of pages you have read"
 					min="0"
 					max={$updatedBook.pages}
-					bind:value={$updatedBook.progress}
+					bind:value={$updatedBook.done}
 				/>
 			</label>
 		{/if}
