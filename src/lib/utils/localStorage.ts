@@ -1,5 +1,3 @@
-import 'crypto';
-
 import { type TrackedBook, type LocalStorage } from '$lib/types';
 import { sortBooks } from './format';
 
