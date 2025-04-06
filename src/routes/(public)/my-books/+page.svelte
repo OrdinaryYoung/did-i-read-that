@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade, scale, slide } from 'svelte/transition';
+	import { fade, fly, scale, slide } from 'svelte/transition';
 	import { inview } from 'svelte-inview';
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -26,10 +26,10 @@
 	import {
 		formatDate,
 		LoadStorage,
-		sortBooks,
 		UpdateBookStorage,
 		DeleteBookStorage,
-		saveSortBy
+		saveSortBy,
+		savePageLimit
 	} from '$lib/utils';
 
 	import type { TrackedBook, LocalStorage } from '$lib/types';
@@ -37,10 +37,23 @@
 
 	let localStorage: LocalStorage = $state({
 		books: [],
+		currentReading: null,
+		statsistics: {
+			reading: 0,
+			completed: 0,
+			'on-hold': 0,
+			dropped: 0,
+			'plan-to-read': 0,
+			totalBooks: 0,
+			totalPages: 0
+		},
 		sortBy: '',
-		isAcscending: false
+		isAcscending: false,
+		totalBooks: -1,
+		pageLimit: 20
 	});
-	let { books, sortBy, isAcscending } = $derived(localStorage);
+	let { books, statsistics, currentReading, sortBy, isAcscending, totalBooks, pageLimit } =
+		$derived(localStorage);
 
 	const checkboxStates = $state([
 		{ id: 'title', label: 'Title', checked: true },
@@ -54,16 +67,8 @@
 	]); // Should Auto Generate it Based on Database
 
 	let filteredCols: string[] = $state([]);
-
-	let stats = $state({
-		reading: 0,
-		completed: 0,
-		'on-hold': 0,
-		dropped: 0,
-		'plan-to-read': 0,
-		totalBooks: 0,
-		totalPages: 0
-	});
+	let currentPage: number = $state(1);
+	let totalPages: number = $derived(Math.ceil(totalBooks / pageLimit));
 
 	const statusColors: Record<string, string> = {
 		'plan-to-read': 'gray-400',
@@ -76,7 +81,30 @@
 	let isPageLoading: boolean = $state(true);
 	let ProgressIsInView: boolean = $state(false);
 	let barIsInView: boolean = $state(false);
-	let showCheckboxes: boolean = $state(false);
+	let showTableSettings: boolean = $state(false);
+
+	const applyPageLimit = () => {
+		try {
+			savePageLimit(pageLimit);
+			currentPage = 1;
+			localStorage = LoadStorage(currentPage);
+		} catch (error) {
+			showToast('Error applying the changes.. Please try again!', 'error');
+			console.error('Error applying pagination: ', error);
+		}
+	};
+	const changePage = (page: number) => {
+		try {
+			localStorage = LoadStorage(page);
+
+			if (page > 0 && page <= totalPages) {
+				currentPage = page;
+			}
+		} catch (error) {
+			showToast('Error reloading the table.. Please try again!', 'error');
+			console.error('Error changing Page: ', error);
+		}
+	};
 
 	const applySorting = (newSortBy: keyof TrackedBook, isAcscending: boolean) => {
 		try {
@@ -84,10 +112,10 @@
 			else isAcscending = !isAcscending;
 
 			saveSortBy(newSortBy, isAcscending);
-			localStorage = LoadStorage();
-			books = localStorage['books'];
+			localStorage = LoadStorage(currentPage);
 		} catch (error) {
-			console.error('Error applying sorting:', error);
+			showToast('Error applying sorting.. Please try again!', 'error');
+			console.error('Error applying sorting: ', error);
 		}
 	};
 
@@ -95,7 +123,8 @@
 		try {
 			filteredCols = checkboxStates.filter((option) => option.checked).map((option) => option.id);
 		} catch (error) {
-			console.error('Error applying filter:', error);
+			showToast('Error applying filtering.. Please try again!', 'error');
+			console.error('Error applying filter: ', error);
 		}
 	};
 
@@ -131,11 +160,10 @@
 						if (vpr) throw vpr;
 
 						UpdateBookStorage(updatedBook);
-						localStorage = LoadStorage();
-						updateStats();
+						localStorage = LoadStorage(currentPage);
 						showToast('Book Updated successfully!', 'success');
 					} catch (error) {
-						console.error('Error updating book:', error);
+						console.error('Error updating book: ', error);
 						throw Error(error as string);
 					}
 				},
@@ -160,9 +188,11 @@
 				() => {
 					try {
 						DeleteBookStorage(book.id);
-						localStorage = LoadStorage();
+						if (currentPage > Math.ceil((totalBooks - 1) / pageLimit)) {
+							currentPage -= 1;
+						}
+						localStorage = LoadStorage(currentPage);
 						showToast('Book deleted successfully!', 'success');
-						updateStats();
 					} catch (error) {
 						throw Error('Error deleting book: ' + error);
 					}
@@ -176,22 +206,10 @@
 		}
 	};
 
-	const updateStats = () => {
-		stats.totalBooks = books.length;
-		stats.totalPages = books.reduce((sum, book) => sum + book.done, 0);
-
-		Object.keys(stats).forEach((status) => {
-			if (status !== 'totalBooks' && status !== 'totalPages') {
-				stats[status as keyof typeof stats] = books.filter((book) => book.status === status).length;
-			}
-		});
-	};
-
 	onMount(() => {
 		isPageLoading = true;
-		localStorage = LoadStorage();
+		localStorage = LoadStorage(currentPage);
 		filteredCols = checkboxStates.filter((option) => option.checked).map((option) => option.id);
-		updateStats();
 		isPageLoading = false;
 	});
 </script>
@@ -203,24 +221,22 @@
 		class="container mx-auto px-4 pb-16"
 		in:scale={{ duration: 500, delay: 10, easing: (t) => t * t }}
 	>
-		{#if books.filter((book) => book.status === 'reading').length !== 0}
-			{@const HARD_COPY_BOOK: TrackedBook[] = JSON.parse(JSON.stringify(books))}
-			{@const CONT_BOOK: TrackedBook = sortBooks(HARD_COPY_BOOK).filter((book)=> book.status === 'reading')[0]}
+		{#if currentReading}
 			<section class="mx-auto mt-12 grid w-full justify-center gap-8 text-center">
 				<h1 class="text-2xl font-semibold">Continue Reading</h1>
 				<div class="flex h-fit w-xs flex-col gap-4 rounded-lg border border-gray-300 p-4 shadow-lg">
 					<img src="https://placehold.co/300x350?text=?" alt="book cover" class="rounded-lg" />
 					<div>
-						<p class="text-xl font-semibold">{CONT_BOOK.title}</p>
-						<p>{CONT_BOOK.author}</p>
+						<p class="text-xl font-semibold">{currentReading.title}</p>
+						<p>{currentReading.author}</p>
 						<div class="mt-6">
 							<p class="mb-0.5 text-end text-[.7rem] text-gray-400">
 								page <span
 									class="text-sm"
-									style="color: var(--color-{statusColors[CONT_BOOK.status]})"
-									>{CONT_BOOK.done}</span
+									style="color: var(--color-{statusColors[currentReading.status]})"
+									>{currentReading.done}</span
 								>
-								of {CONT_BOOK.pages}
+								of {currentReading.pages}
 							</p>
 							<div
 								use:inview={{ unobserveOnEnter: true, rootMargin: '-20%' }}
@@ -232,18 +248,18 @@
 								{#if ProgressIsInView}
 									<div
 										in:slide={{
-											duration: 1000 * CONT_BOOK.done_percent,
+											duration: 1000 * currentReading.done_percent,
 											delay: 500 * Math.random(),
 											axis: 'x',
 											easing: (t) => t * t
 										}}
 										class="h-full overflow-hidden duration-750 ease-out"
 										style="width: {(
-											CONT_BOOK.done_percent * 100
-										).toFixed()}%; background: var(--color-{statusColors[CONT_BOOK.status]})"
+											currentReading.done_percent * 100
+										).toFixed()}%; background: var(--color-{statusColors[currentReading.status]})"
 									>
 										<p class="absolute left-1/2 translate-x-[-50%] text-white">
-											{(CONT_BOOK.done_percent * 100).toFixed()}%
+											{(currentReading.done_percent * 100).toFixed()}%
 										</p>
 									</div>
 								{/if}
@@ -251,7 +267,7 @@
 						</div>
 						<div class="mt-6 flex flex-col gap-1 text-start text-sm">
 							<p class="text-gray-400">Last Reading Time:</p>
-							{formatDate(CONT_BOOK.added_at, 'date-time-day')}
+							{formatDate(currentReading.added_at, 'date-time-day')}
 						</div>
 					</div>
 				</div>
@@ -267,39 +283,43 @@
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-green-500 duration-750 ease-out"
-					style="width: {(stats['reading'] / stats['totalBooks']) * 100}%"
+					style="width: {(statsistics['reading'] / statsistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-indigo-700 duration-750 ease-out"
-					style="width: {(stats['completed'] / stats['totalBooks']) * 100}%"
+					style="width: {(statsistics['completed'] / statsistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-amber-400 duration-750 ease-out"
-					style="width: {(stats['on-hold'] / stats['totalBooks']) * 100}%"
+					style="width: {(statsistics['on-hold'] / statsistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-red-700 duration-750 ease-out"
-					style="width: {(stats['dropped'] / stats['totalBooks']) * 100}%"
+					style="width: {(statsistics['dropped'] / statsistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-gray-400 duration-750 ease-out"
-					style="width: {(stats['plan-to-read'] / stats['totalBooks']) * 100}%"
+					style="width: {(statsistics['plan-to-read'] / statsistics['totalBooks']) * 100}%"
 				></div>
 			</div>
 			<div class="mt-4 flex flex-col gap-16 md:w-xl md:flex-row">
 				<StatusIndicatorUl>
-					<StatusIndicatorLi color="text-green-500" type="Reading" value={stats.reading} />
-					<StatusIndicatorLi color="text-indigo-700" type="Completed" value={stats.completed} />
-					<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={stats['on-hold']} />
-					<StatusIndicatorLi color="text-red-700" type="Dropped" value={stats.dropped} />
+					<StatusIndicatorLi color="text-green-500" type="Reading" value={statsistics.reading} />
+					<StatusIndicatorLi
+						color="text-indigo-700"
+						type="Completed"
+						value={statsistics.completed}
+					/>
+					<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={statsistics['on-hold']} />
+					<StatusIndicatorLi color="text-red-700" type="Dropped" value={statsistics.dropped} />
 					<StatusIndicatorLi
 						color="text-gray-400"
 						type="Plan to Read"
-						value={stats['plan-to-read']}
+						value={statsistics['plan-to-read']}
 					/>
 				</StatusIndicatorUl>
 				<ul class="flex grow flex-col gap-1">
@@ -307,13 +327,13 @@
 						<div class="flex items-center gap-2">
 							<p class="text-sm text-gray-600">Total Books</p>
 						</div>
-						<p class="">{stats.totalBooks}</p>
+						<p class="">{statsistics.totalBooks}</p>
 					</li>
 					<li class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<p class="text-sm text-gray-600">Pages</p>
 						</div>
-						<p class="">{stats.totalPages}</p>
+						<p class="">{statsistics.totalPages}</p>
 					</li>
 				</ul>
 			</div>
@@ -341,34 +361,81 @@
 					<div class="mt-3 flex w-full flex-col items-end gap-1 text-sm text-gray-800">
 						<button
 							class="size-8 rounded-full border text-gray-800 shadow-md duration-500 hover:bg-gray-300"
-							class:rotate-180={showCheckboxes}
-							class:bg-indigo-500={showCheckboxes}
-							class:text-white={showCheckboxes}
-							onclick={() => (showCheckboxes = !showCheckboxes)}
+							class:rotate-180={showTableSettings}
+							class:bg-indigo-500={showTableSettings}
+							class:text-white={showTableSettings}
+							onclick={() => (showTableSettings = !showTableSettings)}
 						>
 							<FontAwesomeIcon class="fa-lg" icon={faGear} />
 						</button>
 
-						{#if showCheckboxes}
+						{#if showTableSettings}
 							<div
 								in:fade={{ duration: 300 }}
-								class="flex w-full flex-wrap gap-4 self-start rounded-lg border border-gray-300 p-4 shadow-sm"
+								class="flex w-full flex-col gap-4 self-start rounded-lg border border-gray-300 p-4 shadow-sm"
 							>
-								{#each checkboxStates as option (option.id)}
-									<label
-										class="flex min-w-[120px] basis-1/3 items-center gap-1 text-nowrap sm:basis-1/4 md:basis-1/5 lg:basis-1/12"
+								<div class="flex w-full flex-wrap gap-4 self-start">
+									{#each checkboxStates as option (option.id)}
+										<label
+											class="flex min-w-[120px] basis-1/3 items-center gap-1 text-nowrap sm:basis-1/4 md:basis-1/5 lg:basis-1/12"
+										>
+											<input
+												type="checkbox"
+												disabled={option.id === 'title'}
+												bind:checked={option.checked}
+												onchange={() => {
+													applyFilter();
+												}}
+											/>
+											{option.label}
+										</label>
+									{/each}
+								</div>
+								<div class="flex items-center gap-2">
+									<label for="booksPerPage" class="text-sm font-medium">Items per page:</label>
+									<select
+										id="booksPerPage"
+										bind:value={pageLimit}
+										class="rounded border border-gray-600 px-1 shadow-sm"
+										onchange={applyPageLimit}
 									>
-										<input
-											type="checkbox"
-											disabled={option.id === 'title'}
-											bind:checked={option.checked}
-											onchange={() => {
-												applyFilter();
-											}}
-										/>
-										{option.label}
-									</label>
+										<option value={10}>10</option>
+										<option value={25}>25</option>
+										<option value={50}>50</option>
+										<option value={100}>100</option>
+									</select>
+								</div>
+							</div>
+						{/if}
+						{#if totalPages > 1}
+							<div class="my-2 flex flex-wrap justify-center gap-y-2 self-center-safe duration-300">
+								{#if currentPage > 1}
+									<button
+										transition:fade
+										class="flex cursor-pointer items-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-center hover:bg-gray-300 focus:outline-none active:bg-gray-400 disabled:cursor-default disabled:bg-gray-50 disabled:text-gray-300"
+										onclick={() => changePage(currentPage - 1)}>Previous</button
+									>
+								{/if}
+								{#each Array(totalPages) as _, pageIndex}
+									<button
+										in:fade
+										out:fly={{ y: 20 }}
+										class="mx-1 rounded border px-3 py-1 duration-150 {currentPage === pageIndex + 1
+											? 'bg-indigo-500 text-white'
+											: 'bg-gray-200 hover:bg-gray-300'}"
+										onclick={() => changePage(pageIndex + 1)}
+									>
+										{pageIndex + 1}
+									</button>
 								{/each}
+
+								{#if currentPage < totalPages}
+									<button
+										transition:fade
+										class="flex cursor-pointer items-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-center hover:bg-gray-300 focus:outline-none active:bg-gray-400 disabled:cursor-default disabled:bg-gray-50 disabled:text-gray-300"
+										onclick={() => changePage(currentPage + 1)}>Next</button
+									>
+								{/if}
 							</div>
 						{/if}
 					</div>
@@ -409,7 +476,7 @@
 							<tbody>
 								{#each books as book, i (i)}
 									<tr class={i % 2 !== 0 ? 'bg-indigo-100' : ''}>
-										<td class="px-4 py-2">{i + 1}</td>
+										<td class="px-4 py-2">{i + (currentPage - 1) * pageLimit + 1}</td>
 										{#each filteredCols as column}
 											<td
 												class="px-4 py-2 text-center"
@@ -480,6 +547,37 @@
 							</tbody>
 						</table>
 					</div>
+					{#if totalPages > 1}
+						<div class="my-2 flex flex-wrap justify-center gap-y-2 self-center-safe duration-300">
+							{#if currentPage > 1}
+								<button
+									transition:fade
+									class="flex cursor-pointer items-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-center hover:bg-gray-300 focus:outline-none active:bg-gray-400 disabled:cursor-default disabled:bg-gray-50 disabled:text-gray-300"
+									onclick={() => changePage(currentPage - 1)}>Previous</button
+								>
+							{/if}
+							{#each Array(totalPages) as _, pageIndex}
+								<button
+									in:fade
+									out:fly={{ y: 20 }}
+									class="mx-1 rounded border px-3 py-1 duration-150 {currentPage === pageIndex + 1
+										? 'bg-indigo-500 text-white'
+										: 'bg-gray-200 hover:bg-gray-300'}"
+									onclick={() => changePage(pageIndex + 1)}
+								>
+									{pageIndex + 1}
+								</button>
+							{/each}
+
+							{#if currentPage < totalPages}
+								<button
+									transition:fade
+									class="flex cursor-pointer items-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-center hover:bg-gray-300 focus:outline-none active:bg-gray-400 disabled:cursor-default disabled:bg-gray-50 disabled:text-gray-300"
+									onclick={() => changePage(currentPage + 1)}>Next</button
+								>
+							{/if}
+						</div>
+					{/if}
 				{/if}
 			</div>
 		</section>

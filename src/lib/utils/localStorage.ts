@@ -1,20 +1,31 @@
-import { type TrackedBook, type LocalStorage } from '$lib/types';
-import { sortBooks } from './format';
+import { type TrackedBook, type LocalStorage, type PageLimit } from '$lib/types';
+import { sortBooks, updateStats } from './format';
 
 const STORAGE_BOOKS = 'books';
 const STORAGE_SORT = 'sortBy';
 const STORAGE_SORT_ACS = 'isAcscending';
+const STORAGE_PAGE_LIMIT = 'pageLimit';
 
-export function loadStorage(): LocalStorage {
+export function loadStorage(curPage: number = 1): LocalStorage {
+	const pageLimit: PageLimit =
+		(Number(localStorage.getItem(STORAGE_PAGE_LIMIT)) as PageLimit) || 25;
+	const start: number = pageLimit * (curPage - 1);
+	const end: number = start + pageLimit;
 	const books: TrackedBook[] = loadBooks();
+	const totalBooks = books.length;
+	const currentReading: TrackedBook = books.filter((book) => book.status === 'reading')[0];
 
 	const sortBy: string = localStorage.getItem(STORAGE_SORT) || 'updated_at';
 	const isAcscending: boolean = localStorage.getItem(STORAGE_SORT_ACS) === 'true' ? true : false;
 
 	return {
-		books: sortBooks(books, sortBy as keyof TrackedBook, isAcscending),
+		books: sortBooks(books, sortBy as keyof TrackedBook, isAcscending).slice(start, end),
+		statsistics: updateStats(books),
+		currentReading,
 		sortBy,
-		isAcscending
+		isAcscending,
+		pageLimit,
+		totalBooks
 	};
 }
 
@@ -31,6 +42,9 @@ export function saveBooks(books: TrackedBook[]) {
 export function saveSortBy(sortBy: keyof TrackedBook, isAcscending: boolean) {
 	localStorage.setItem(STORAGE_SORT, sortBy);
 	localStorage.setItem(STORAGE_SORT_ACS, JSON.stringify(isAcscending));
+}
+export function savePageLimit(limit: PageLimit) {
+	localStorage.setItem(STORAGE_PAGE_LIMIT, JSON.stringify(limit));
 }
 
 // Add a new book to Local Storage

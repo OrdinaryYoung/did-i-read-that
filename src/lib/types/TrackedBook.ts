@@ -11,3 +11,13 @@ export type TrackedBook = {
 };
 
 export type BookStatus = 'plan-to-read' | 'reading' | 'completed' | 'on-hold' | 'dropped'; // Reading Status
+
+export type TrackingStatsistics = {
+	reading: number;
+	completed: number;
+	'on-hold': number;
+	dropped: number;
+	'plan-to-read': number;
+	totalBooks: number;
+	totalPages: number;
+};

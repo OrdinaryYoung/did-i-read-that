@@ -1,4 +1,4 @@
-import type { TrackedBook } from '$lib/types';
+import type { TrackedBook, TrackingStatsistics } from '$lib/types';
 import { format } from 'date-fns';
 
 export function formatDate(
@@ -44,3 +44,25 @@ export function sortBooks(
 	}
 	return sorted;
 }
+
+export const updateStats = (books: TrackedBook[]): TrackingStatsistics => {
+	const stats = {
+		reading: 0,
+		completed: 0,
+		'on-hold': 0,
+		dropped: 0,
+		'plan-to-read': 0,
+		totalBooks: 0,
+		totalPages: 0
+	};
+
+	stats.totalBooks = books.length;
+	stats.totalPages = books.reduce((sum, book) => sum + book.done, 0);
+
+	Object.keys(stats).forEach((status) => {
+		if (status !== 'totalBooks' && status !== 'totalPages') {
+			stats[status as keyof typeof stats] = books.filter((book) => book.status === status).length;
+		}
+	});
+	return stats;
+};

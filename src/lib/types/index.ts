@@ -1,4 +1,4 @@
-export type { TrackedBook } from './TrackedBook';
+export type { TrackedBook, TrackingStatsistics } from './TrackedBook';
 export type { ModalConfig } from './Components';
 export type { Toast, ToastType } from './Toast';
-export type { LocalStorage } from './LocalStorage';
+export type { LocalStorage, PageLimit } from './LocalStorage';
