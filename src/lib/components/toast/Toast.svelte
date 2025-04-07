@@ -43,7 +43,7 @@
 <style lang="postcss">
 	@reference "tailwindcss";
 	.toasts {
-		@apply fixed top-7 right-7 flex flex-col-reverse gap-3;
+		@apply fixed top-2 right-1/2 flex w-full translate-x-[50%] flex-col-reverse gap-3 p-4 text-xs md:right-5 md:w-fit md:translate-x-0 md:text-sm;
 	}
 	.toast {
 		@apply flex items-center gap-4 rounded p-4 text-white shadow-lg;
