@@ -7,6 +7,7 @@ node_modules
 .wrangler
 stats.html
 imp_cmd.txt
+notes.txt
 /.svelte-kit
 /build
 

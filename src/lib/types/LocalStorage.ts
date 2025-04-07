@@ -11,3 +11,5 @@ export type LocalStorage = {
 };
 
 export type PageLimit = 10 | 20 | 25 | 50 | 100;
+
+export type Themes = 'light' | 'dark' | null;
