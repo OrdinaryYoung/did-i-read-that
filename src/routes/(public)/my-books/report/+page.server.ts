@@ -20,7 +20,7 @@ export const load = ({ cookies }) => {
 	return {
 		localStorage: {
 			books: sortBooks(books, sortBy as keyof TrackedBook, isAscending),
-			statsistics: updateStats(books),
+			statistics: updateStats(books),
 			sortBy,
 			isAscending
 		},

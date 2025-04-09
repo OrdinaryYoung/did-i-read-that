@@ -1,11 +1,11 @@
-import type { TrackedBook, TrackingStatsistics } from './TrackedBook';
+import type { TrackedBook, TrackingStatistics } from './TrackedBook';
 
 export type LocalStorage = {
 	books: TrackedBook[];
-	statsistics: TrackingStatsistics;
+	statistics: TrackingStatistics;
 	currentReading: TrackedBook | null;
 	sortBy: string;
-	isAcscending: boolean;
+	isAscending: boolean;
 	totalBooks: number;
 	pageLimit: PageLimit;
 };

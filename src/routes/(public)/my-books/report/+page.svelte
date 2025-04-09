@@ -16,7 +16,7 @@
 
 	console.log(page.data.localStorage);
 	const localStorage = page.data.localStorage;
-	const { books, statsistics, sortBy, isAscending, pageLimit } = localStorage;
+	const { books, statistics, sortBy, isAscending, pageLimit } = localStorage;
 
 	const checkboxStates = $state([
 		{ id: 'title', label: 'Title', checked: true },
@@ -55,35 +55,35 @@
 		<div class="mt-6 flex h-6 overflow-hidden rounded-lg bg-gray-200 md:w-146">
 			<div
 				class="h-full bg-green-500"
-				style="width: {(statsistics['reading'] / statsistics['totalBooks']) * 100}%"
+				style="width: {(statistics['reading'] / statistics['totalBooks']) * 100}%"
 			></div>
 			<div
 				class="h-full bg-indigo-700"
-				style="width: {(statsistics['completed'] / statsistics['totalBooks']) * 100}%"
+				style="width: {(statistics['completed'] / statistics['totalBooks']) * 100}%"
 			></div>
 			<div
 				class="h-full bg-amber-400"
-				style="width: {(statsistics['on-hold'] / statsistics['totalBooks']) * 100}%"
+				style="width: {(statistics['on-hold'] / statistics['totalBooks']) * 100}%"
 			></div>
 			<div
 				class="h-full bg-red-700"
-				style="width: {(statsistics['dropped'] / statsistics['totalBooks']) * 100}%"
+				style="width: {(statistics['dropped'] / statistics['totalBooks']) * 100}%"
 			></div>
 			<div
 				class="h-full bg-gray-400"
-				style="width: {(statsistics['plan-to-read'] / statsistics['totalBooks']) * 100}%"
+				style="width: {(statistics['plan-to-read'] / statistics['totalBooks']) * 100}%"
 			></div>
 		</div>
 		<div class="mt-4 flex flex-col gap-16 md:w-xl md:flex-row">
 			<StatusIndicatorUl>
-				<StatusIndicatorLi color="text-green-500" type="Reading" value={statsistics.reading} />
-				<StatusIndicatorLi color="text-indigo-700" type="Completed" value={statsistics.completed} />
-				<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={statsistics['on-hold']} />
-				<StatusIndicatorLi color="text-red-700" type="Dropped" value={statsistics.dropped} />
+				<StatusIndicatorLi color="text-green-500" type="Reading" value={statistics.reading} />
+				<StatusIndicatorLi color="text-indigo-700" type="Completed" value={statistics.completed} />
+				<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={statistics['on-hold']} />
+				<StatusIndicatorLi color="text-red-700" type="Dropped" value={statistics.dropped} />
 				<StatusIndicatorLi
 					color="text-gray-400"
 					type="Plan to Read"
-					value={statsistics['plan-to-read']}
+					value={statistics['plan-to-read']}
 				/>
 			</StatusIndicatorUl>
 			<ul class="flex grow flex-col gap-1">
@@ -91,13 +91,13 @@
 					<div class="flex items-center gap-2">
 						<p class="text-sm text-gray-600">Total Books</p>
 					</div>
-					<p class="">{statsistics.totalBooks}</p>
+					<p class="">{statistics.totalBooks}</p>
 				</li>
 				<li class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<p class="text-sm text-gray-600">Pages</p>
 					</div>
-					<p class="">{statsistics.totalPages}</p>
+					<p class="">{statistics.totalPages}</p>
 				</li>
 			</ul>
 		</div>

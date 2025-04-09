@@ -1,4 +1,4 @@
-import type { TrackedBook, TrackingStatsistics } from '$lib/types';
+import type { TrackedBook, TrackingStatistics } from '$lib/types';
 import { format } from 'date-fns';
 
 export function formatDate(
@@ -23,7 +23,7 @@ export function formatDate(
 export function sortBooks(
 	books: TrackedBook[],
 	sortBy: keyof TrackedBook = 'updated_at',
-	isAcscending: boolean = false
+	isAscending: boolean = false
 ): TrackedBook[] {
 	const sorted = books.sort((a: TrackedBook, b: TrackedBook) => {
 		const aValue = a[sortBy];
@@ -39,13 +39,13 @@ export function sortBooks(
 		}
 		return 0;
 	});
-	if (!isAcscending) {
+	if (!isAscending) {
 		return sorted.reverse();
 	}
 	return sorted;
 }
 
-export const updateStats = (books: TrackedBook[]): TrackingStatsistics => {
+export const updateStats = (books: TrackedBook[]): TrackingStatistics => {
 	const stats = {
 		reading: 0,
 		completed: 0,

@@ -38,7 +38,7 @@
 	let localStorage: LocalStorage = $state({
 		books: [],
 		currentReading: null,
-		statsistics: {
+		statistics: {
 			reading: 0,
 			completed: 0,
 			'on-hold': 0,
@@ -48,11 +48,11 @@
 			totalPages: 0
 		},
 		sortBy: '',
-		isAcscending: false,
+		isAscending: false,
 		totalBooks: -1,
 		pageLimit: 20
 	});
-	let { books, statsistics, currentReading, sortBy, isAcscending, totalBooks, pageLimit } =
+	let { books, statistics, currentReading, sortBy, isAscending, totalBooks, pageLimit } =
 		$derived(localStorage);
 
 	const checkboxStates = $state([
@@ -106,12 +106,12 @@
 		}
 	};
 
-	const applySorting = (newSortBy: keyof TrackedBook, isAcscending: boolean) => {
+	const applySorting = (newSortBy: keyof TrackedBook, isAscending: boolean) => {
 		try {
-			if (sortBy !== newSortBy) isAcscending = true;
-			else isAcscending = !isAcscending;
+			if (sortBy !== newSortBy) isAscending = true;
+			else isAscending = !isAscending;
 
-			saveSortBy(newSortBy, isAcscending);
+			saveSortBy(newSortBy, isAscending);
 			localStorage = LoadStorage(currentPage);
 		} catch (error) {
 			showToast('Error applying sorting.. Please try again!', 'error');
@@ -283,43 +283,43 @@
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-green-500 duration-750 ease-out"
-					style="width: {(statsistics['reading'] / statsistics['totalBooks']) * 100}%"
+					style="width: {(statistics['reading'] / statistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-indigo-700 duration-750 ease-out"
-					style="width: {(statsistics['completed'] / statsistics['totalBooks']) * 100}%"
+					style="width: {(statistics['completed'] / statistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-amber-400 duration-750 ease-out"
-					style="width: {(statsistics['on-hold'] / statsistics['totalBooks']) * 100}%"
+					style="width: {(statistics['on-hold'] / statistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-red-700 duration-750 ease-out"
-					style="width: {(statsistics['dropped'] / statsistics['totalBooks']) * 100}%"
+					style="width: {(statistics['dropped'] / statistics['totalBooks']) * 100}%"
 				></div>
 				<div
 					in:slide={{ duration: 1500, delay: 500, axis: 'x', easing: (t) => t * t }}
 					class="h-full bg-gray-400 duration-750 ease-out"
-					style="width: {(statsistics['plan-to-read'] / statsistics['totalBooks']) * 100}%"
+					style="width: {(statistics['plan-to-read'] / statistics['totalBooks']) * 100}%"
 				></div>
 			</div>
 			<div class="mt-4 flex flex-col gap-16 md:w-xl md:flex-row">
 				<StatusIndicatorUl>
-					<StatusIndicatorLi color="text-green-500" type="Reading" value={statsistics.reading} />
+					<StatusIndicatorLi color="text-green-500" type="Reading" value={statistics.reading} />
 					<StatusIndicatorLi
 						color="text-indigo-700"
 						type="Completed"
-						value={statsistics.completed}
+						value={statistics.completed}
 					/>
-					<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={statsistics['on-hold']} />
-					<StatusIndicatorLi color="text-red-700" type="Dropped" value={statsistics.dropped} />
+					<StatusIndicatorLi color="text-amber-400" type="On-Hold" value={statistics['on-hold']} />
+					<StatusIndicatorLi color="text-red-700" type="Dropped" value={statistics.dropped} />
 					<StatusIndicatorLi
 						color="text-gray-400"
 						type="Plan to Read"
-						value={statsistics['plan-to-read']}
+						value={statistics['plan-to-read']}
 					/>
 				</StatusIndicatorUl>
 				<ul class="flex grow flex-col gap-1">
@@ -327,13 +327,13 @@
 						<div class="flex items-center gap-2">
 							<p class="text-sm text-gray-600">Total Books</p>
 						</div>
-						<p class="">{statsistics.totalBooks}</p>
+						<p class="">{statistics.totalBooks}</p>
 					</li>
 					<li class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<p class="text-sm text-gray-600">Pages</p>
 						</div>
-						<p class="">{statsistics.totalPages}</p>
+						<p class="">{statistics.totalPages}</p>
 					</li>
 				</ul>
 			</div>
@@ -449,7 +449,7 @@
 											class="px-4 py-2 text-center font-semibold capitalize select-none"
 											class:text-start={column === 'title'}
 											onclick={() => {
-												applySorting(column as keyof TrackedBook, isAcscending);
+												applySorting(column as keyof TrackedBook, isAscending);
 											}}
 										>
 											{#if column === 'done%'}
@@ -461,7 +461,7 @@
 											{/if}
 
 											{#if column === sortBy}
-												{#if isAcscending}
+												{#if isAscending}
 													<FontAwesomeIcon class="ml-2 size-4" icon={faArrowUp} />
 												{:else}
 													<FontAwesomeIcon class="ml-2 size-4" icon={faArrowDown} />

@@ -12,7 +12,7 @@ export type TrackedBook = {
 
 export type BookStatus = 'plan-to-read' | 'reading' | 'completed' | 'on-hold' | 'dropped'; // Reading Status
 
-export type TrackingStatsistics = {
+export type TrackingStatistics = {
 	reading: number;
 	completed: number;
 	'on-hold': number;

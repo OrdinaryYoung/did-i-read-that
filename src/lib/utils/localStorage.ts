@@ -3,7 +3,7 @@ import { sortBooks, updateStats } from './format';
 
 const STORAGE_BOOKS = 'books';
 const STORAGE_SORT = 'sortBy';
-const STORAGE_SORT_ACS = 'isAcscending';
+const STORAGE_SORT_ACS = 'isAscending';
 const STORAGE_PAGE_LIMIT = 'pageLimit';
 
 export function loadStorage(curPage: number = 1): LocalStorage {
@@ -16,14 +16,14 @@ export function loadStorage(curPage: number = 1): LocalStorage {
 	const currentReading: TrackedBook = books.filter((book) => book.status === 'reading')[0];
 
 	const sortBy: string = localStorage.getItem(STORAGE_SORT) || 'updated_at';
-	const isAcscending: boolean = localStorage.getItem(STORAGE_SORT_ACS) === 'true' ? true : false;
+	const isAscending: boolean = localStorage.getItem(STORAGE_SORT_ACS) === 'true' ? true : false;
 
 	return {
-		books: sortBooks(books, sortBy as keyof TrackedBook, isAcscending).slice(start, end),
-		statsistics: updateStats(books),
+		books: sortBooks(books, sortBy as keyof TrackedBook, isAscending).slice(start, end),
+		statistics: updateStats(books),
 		currentReading,
 		sortBy,
-		isAcscending,
+		isAscending,
 		pageLimit,
 		totalBooks
 	};
@@ -39,9 +39,9 @@ export function loadBooks(): TrackedBook[] {
 export function saveBooks(books: TrackedBook[]) {
 	localStorage.setItem(STORAGE_BOOKS, JSON.stringify(books));
 }
-export function saveSortBy(sortBy: keyof TrackedBook, isAcscending: boolean) {
+export function saveSortBy(sortBy: keyof TrackedBook, isAscending: boolean) {
 	localStorage.setItem(STORAGE_SORT, sortBy);
-	localStorage.setItem(STORAGE_SORT_ACS, JSON.stringify(isAcscending));
+	localStorage.setItem(STORAGE_SORT_ACS, JSON.stringify(isAscending));
 }
 export function savePageLimit(limit: PageLimit) {
 	localStorage.setItem(STORAGE_PAGE_LIMIT, JSON.stringify(limit));
