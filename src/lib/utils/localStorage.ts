@@ -1,10 +1,6 @@
+import { STORAGE_BOOKS, STORAGE_PAGE_LIMIT, STORAGE_SORT, STORAGE_SORT_ACS } from '$lib/constants';
 import { type TrackedBook, type LocalStorage, type PageLimit } from '$lib/types';
 import { sortBooks, updateStats } from './format';
-
-const STORAGE_BOOKS = 'books';
-const STORAGE_SORT = 'sortBy';
-const STORAGE_SORT_ACS = 'isAscending';
-const STORAGE_PAGE_LIMIT = 'pageLimit';
 
 export function loadStorage(curPage: number = 1): LocalStorage {
 	const pageLimit: PageLimit =

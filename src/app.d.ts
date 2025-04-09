@@ -4,6 +4,10 @@ import type { Themes } from '$lib/types';
 
 // for information about these interfaces
 declare global {
+	interface Window {
+		renderReady: boolean;
+	}
+
 	namespace App {
 		// interface Error {}
 		interface Locals {

@@ -4,7 +4,6 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { scale } from 'svelte/transition';
-	8;
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faWifi } from '@fortawesome/free-solid-svg-icons';

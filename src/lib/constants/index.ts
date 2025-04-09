@@ -1,1 +1,2 @@
 export { MAX_TITLE_LENGTH, MAX_AUTHOR_LENGTH, MAX_PAGES } from './book';
+export { STORAGE_BOOKS, STORAGE_SORT, STORAGE_SORT_ACS, STORAGE_PAGE_LIMIT } from './localStorage';

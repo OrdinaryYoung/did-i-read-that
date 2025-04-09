@@ -12,7 +12,8 @@
 		faTrashCan,
 		faArrowDown,
 		faArrowUp,
-		faGear
+		faGear,
+		faFilePdf
 	} from '@fortawesome/free-solid-svg-icons';
 
 	import {
@@ -206,6 +207,28 @@
 		}
 	};
 
+	const exportPDF = async () => {
+		try {
+			const response = await fetch('/api/app/export-pdf', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ls: localStorage })
+			});
+			if (!response.ok) throw response;
+
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `Books_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+			a.click();
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			showToast('Error exporting table.. Please try later!', 'error');
+			console.error(error);
+		}
+	};
+
 	onMount(() => {
 		isPageLoading = true;
 		localStorage = LoadStorage(currentPage);
@@ -344,13 +367,19 @@
 				<h4 class="text-xl">Books List</h4>
 			</div>
 			<hr class="text-gray-200" />
-			<a
-				href="/my-books/add"
-				class="mt-6 flex w-fit items-center justify-start gap-2 rounded bg-indigo-500 px-4 py-2 text-white duration-150 hover:bg-indigo-600"
-			>
-				<FontAwesomeIcon class="size-4" icon={faCirclePlus} />
-				Add a book
-			</a>
+			<div class="mt-6 flex items-center gap-2">
+				<a
+					href="/my-books/add"
+					class="flex w-fit items-center justify-start gap-2 rounded bg-indigo-500 px-4 py-2 text-white duration-150 hover:bg-indigo-600"
+				>
+					<FontAwesomeIcon class="size-4" icon={faCirclePlus} />
+					Add a book
+				</a>
+				<button
+					class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-4 py-2 duration-150 hover:bg-gray-50"
+					onclick={exportPDF}><FontAwesomeIcon icon={faFilePdf} />Export</button
+				>
+			</div>
 
 			<div>
 				{#if books.length === 0}
@@ -483,6 +512,7 @@
 												class:text-start={column === 'title'}
 												class:capitalize={column === 'status'}
 												class:text-nowrap={column !== 'done'}
+												class:md:text-wrap={column === 'title'}
 											>
 												{#if column === 'added_at'}
 													{formatDate(book.added_at)}
