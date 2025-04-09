@@ -13,7 +13,8 @@
 		faArrowDown,
 		faArrowUp,
 		faGear,
-		faFilePdf
+		faFilePdf,
+		faSpinner
 	} from '@fortawesome/free-solid-svg-icons';
 
 	import {
@@ -80,6 +81,7 @@
 	};
 
 	let isPageLoading: boolean = $state(true);
+	let isExporting: boolean = $state(false);
 	let ProgressIsInView: boolean = $state(false);
 	let barIsInView: boolean = $state(false);
 	let showTableSettings: boolean = $state(false);
@@ -209,6 +211,7 @@
 
 	const exportPDF = async () => {
 		try {
+			isExporting = true;
 			const response = await fetch('/api/app/export-pdf', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -226,6 +229,8 @@
 		} catch (error) {
 			showToast('Error exporting table.. Please try later!', 'error');
 			console.error(error);
+		} finally {
+			isExporting = false;
 		}
 	};
 
@@ -377,7 +382,16 @@
 				</a>
 				<button
 					class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-4 py-2 duration-150 hover:bg-gray-50"
-					onclick={exportPDF}><FontAwesomeIcon icon={faFilePdf} />Export</button
+					onclick={exportPDF}
+					disabled={isExporting}
+					class:disabled:text-gray-400={isExporting}
+					class:disabled:cursor-not-allowed={isExporting}
+				>
+					{#if isExporting}
+						<FontAwesomeIcon icon={faSpinner} class="fa-spin" />
+					{:else}
+						<FontAwesomeIcon icon={faFilePdf} />
+					{/if}Export</button
 				>
 			</div>
 
