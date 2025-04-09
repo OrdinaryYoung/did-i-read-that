@@ -1,14 +1,16 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import type { LocalStorage } from '$lib/types';
 import { type RequestHandler } from '@sveltejs/kit';
 
-import { BASE_URL } from '$env/static/private';
+import { BASE_URL, BROWSERLESS_TOKEN } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { ls } = (await request.json()) as { ls: LocalStorage };
 	const { books, sortBy, isAscending } = ls;
 
-	const browser = await puppeteer.launch();
+	const browser = await puppeteer.connect({
+		browserWSEndpoint: `wss://production-sfo.browserless.io/?token=${BROWSERLESS_TOKEN}&proxy=residential`
+	});
 	const page = await browser.newPage();
 
 	await page.goto(BASE_URL, { waitUntil: 'load' });
